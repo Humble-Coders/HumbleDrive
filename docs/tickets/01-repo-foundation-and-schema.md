@@ -20,20 +20,56 @@ This ticket lays the monorepo skeleton and lands the database with every constra
 
 2. **Intermediate stops are driver rest, food, and fuel breaks — not delivery points.** Nothing is loaded or unloaded at a stop. This is the most commonly misread part of the domain (PRD D-3). A stop has a type and a planned duration, and that is all.
 
-**Environment.** You develop against a hosted Supabase **dev** project, not a local Docker stack (manager's call). Two consequences you must respect:
+**Environment — read this twice.** There is **no Docker** on this project and **no local Supabase stack**. There is also **one single hosted Supabase project**, which serves as both development and production. Everything you do lands on the same database everyone else uses.
 
-- The pgTAP tests are **destructive** — they insert and roll back against real tables. They must only ever run against the dev project. Never point them at production.
-- `supabase test db` targets the local stack, so it will not work here. Enable the `pgtap` extension on the dev project and run the test files with `psql` against it. Document the exact command you settle on in the README, because ticket 2 onwards will run it constantly.
+Right now that database holds nothing, so the risk is theoretical. It stops being theoretical the day the first real driver run is recorded. Treat it as production from day one and the transition costs you nothing.
 
-**Migrations.** `supabase/schema.sql` is the human-readable source of truth for the whole schema. `supabase/migrations/` holds timestamped CLI-generated files that are the actual applied history. This ticket produces both, consistent with each other. Every later ticket adds a migration and updates `schema.sql` to match.
+Four consequences you must respect:
+
+1. **`supabase start`, `supabase db reset`, `supabase test db`, `supabase db diff` and `supabase functions serve` all require Docker and are unavailable.** Do not put any of them in the README or in a script.
+2. **Every pgTAP test file must be wrapped in a transaction that is rolled back.** This is what makes a single shared database safe, and it is non-negotiable:
+
+   ```sql
+   begin;
+   select plan(4);
+   -- attempt the bad inserts, assert they are rejected
+   select * from finish();
+   rollback;
+   ```
+
+   A test file without a closing `rollback` is a defect, regardless of whether it passes.
+3. **Never commit a reset, drop, or truncate script.** No `reset.sql`, no "rebuild from scratch" helper. Convenient with a throwaway database, catastrophic with this one.
+4. **`schema.sql` is never re-run against the live database.** It is the readable reference for what the schema should be. Actual changes are forward-only migrations.
+
+**Test data must be identifiable.** Since experiments share the database with real records, prefix anything fake so it can always be told apart and removed — driver emails as `test+alice@humblecoders.in`, and similar.
+
+**Migrations.** `supabase/schema.sql` is the human-readable source of truth for the whole schema. `supabase/migrations/` holds timestamped files that are the actual applied history, applied with `supabase db push`. Because `supabase db diff` needs Docker, **migrations are hand-written** — write the SQL yourself into `supabase/migrations/<timestamp>_name.sql`. This ticket produces both files, consistent with each other. Every later ticket adds a migration and updates `schema.sql` to match.
+
+**Back up before anything structural.** The Supabase free tier includes no automatic backups, so before applying any migration that drops or alters a column:
+
+```bash
+pg_dump "$DB_URL" > backup-$(date +%F).sql
+```
+
+**A note for tickets 2 onward** (worth knowing now, since it shapes the README): without `supabase functions serve`, the only way to run an Edge Function is to deploy it, roughly a 30-second loop. So functions are written as an exported handler with a thin entrypoint, letting `deno test` exercise the logic locally with no server:
+
+```ts
+// handler.ts — pure and testable
+export async function handler(req: Request): Promise<Response> { /* ... */ }
+
+// index.ts — entrypoint
+import { handler } from "./handler.ts"
+Deno.serve(handler)
+```
 
 ## 🔑 Access & prerequisites
 
 Request these from the manager at kickoff, over a secure channel. **None of them belong in the repo, in a commit, or in this issue.**
 
-- **Supabase dev project** — project URL, anon key, service role key. The manager creates the project and hands these over, or invites you to the Supabase org.
-- Confirmation of **which project is dev and which is production**, in writing, before you run a single test.
-- **Supabase CLI** installed locally and linked to the dev project (`supabase link`).
+- **Supabase project** — project URL, anon key, service role key, and the direct Postgres connection string for `psql`. The manager creates the project and hands these over. **There is only one project**; it is simultaneously dev and production.
+- **`pgtap` extension enabled** on that project — ask the manager to enable it from the Supabase dashboard (Database → Extensions) if it is not already on.
+- **Supabase CLI** installed and linked (`supabase link`). **Docker is not required and is not used.**
+- **`psql`** available locally — it is how you apply SQL and run tests.
 - **Write access** to `Humble-Coders/HumbleDrive` (you have it if you can push a branch).
 
 Keys go in a local `.env` that is already gitignored. The committed `.env.example` carries key *names* with empty values and nothing else.
@@ -72,7 +108,13 @@ All primary keys `uuid default gen_random_uuid()` except `admins`. All timestamp
 
 **4. pgTAP tests — `supabase/tests/`**
 
-At minimum, one test per invariant below. Include a short "how to run these" note in the README.
+At minimum, one test per invariant below. **Every file wrapped in `begin; ... rollback;`.** Run them with:
+
+```bash
+psql "$DB_URL" -f supabase/tests/constraints.test.sql
+```
+
+Document the exact command in the README — tickets 2 onward will run it constantly.
 
 **5. First supervisor**
 
@@ -93,6 +135,9 @@ Document in the README how to create the first supervisor by hand: create the us
 - [ ] RLS is enabled on all eight tables and `pg_policies` returns **zero rows** for them
 - [ ] A client using the **anon key** can read nothing and write nothing to any of the eight tables — verified, not assumed
 - [ ] pgTAP tests cover every criterion above and all pass
+- [ ] **Every test file ends in `rollback`** and leaves zero rows behind — verified by checking row counts before and after a full test run
+- [ ] No reset, drop, or truncate script exists anywhere in the repo
+- [ ] The README contains no command requiring Docker
 - [ ] README takes someone from an empty machine to a working schema with passing tests, using only the commands written in it
 - [ ] `git grep` finds no service role key, anon key, or project URL anywhere in the repo
 - [ ] `.env.example` is committed with names only and empty values
@@ -123,4 +168,6 @@ None. This is the first ticket. Everything else depends on it.
 /start-ticket <issue-number>
 ```
 
-At kickoff, ask the manager for the Supabase dev project URL, anon key, and service role key over a secure channel, and get written confirmation of which project is dev versus production **before running any test**. The tests are destructive.
+At kickoff, ask the manager for the Supabase project URL, anon key, service role key, and Postgres connection string over a secure channel, and confirm the `pgtap` extension is enabled.
+
+**Before running a single test, confirm you understand this:** there is one database and it is also production. Tests are only safe because every file rolls back. Check that your test file ends in `rollback` before you run it, every time.
