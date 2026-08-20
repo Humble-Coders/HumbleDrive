@@ -61,13 +61,13 @@ Android  ──code, then session token──► Edge Functions
 - **Theme tokens** (inherited from humblecoders.in, do not invent colors): bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold `#f5c451` · radius `0.875rem` · Inter (logo script: Caveat). Dark theme only. Defined **once** in `tailwind.config.ts` — never an ad-hoc hex in a component.
 
 ### Android (`android/`)
-- Kotlin + Jetpack Compose + Maps SDK + Room. minSdk 26, target current stable. **No DI framework** — see manual DI below.
+- Kotlin + Jetpack Compose + Maps SDK + Room + **Retrofit/kotlinx.serialization**. minSdk 26, target current stable, **both orientations supported**. **No DI framework** — see manual DI below.
 - **Single `:app` module, layered packages: `data/` → `domain/` ← `ui/`, plus `service/`.** Dependencies point one way only: `ui` and `data` may depend on `domain`; `domain` depends on neither. No Android framework types in `domain`.
 
 - **MVVM, strictly.** One ViewModel per screen.
   - **View** — Compose composables only. No business logic, no repository calls, no `suspend` work. They render state and emit events upward.
   - **ViewModel** — exposes a single `StateFlow<UiState>` where `UiState` models loading, empty, error and content **explicitly** (no scattered `isLoading` booleans). Survives rotation. Holds no `Context`, no Compose types, no Android framework imports beyond `ViewModel` itself.
-  - **Model** — `domain/` holds plain Kotlin models and use cases with zero Android imports. `data/` holds repositories that are the **only** things touching Room, Retrofit/Ktor, or `SharedPreferences`. A ViewModel never touches a DAO or an HTTP client directly.
+  - **Model** — `domain/` holds plain Kotlin models and use cases with zero Android imports. `data/` holds repositories that are the **only** things touching Room, Retrofit, or `SharedPreferences`. A ViewModel never touches a DAO or an HTTP client directly.
 - **Manual dependency injection. No Hilt, no Koin, no annotation processors.**
   - A single `AppContainer`, constructed once in `Application.onCreate()`, owns the long-lived singletons: the Room database, the HTTP client, the token store, and every repository. Dependencies are constructed there and passed down as constructor parameters.
   - ViewModels are created through an explicit `ViewModelProvider.Factory` that takes what it needs from `AppContainer`. Use `viewModel(factory = ...)` in composables — never `hiltViewModel()`, never a ViewModel with a no-arg constructor reaching for a global.

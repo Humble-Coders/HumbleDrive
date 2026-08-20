@@ -120,7 +120,7 @@ These are binding. Tickets that violate them get rejected.
 
 6. **Frontend stack is locked:** Vite + React 18 + TypeScript in strict mode + Tailwind. Functional components and hooks only. No Redux, no MobX, no UI kit. `@supabase/supabase-js` for auth, RPC and realtime. React Router for routing.
 
-7. **Android stack is locked:** Kotlin, Jetpack Compose, Maps SDK for Android, `FusedLocationProviderClient`, Room for the offline queue, Retrofit or Ktor for HTTP, and **manual dependency injection — no DI framework**. MVVM, one ViewModel per screen. minSdk 26, target the current stable SDK.
+7. **Android stack is locked:** Kotlin, Jetpack Compose, Maps SDK for Android, `FusedLocationProviderClient`, Room for the offline queue, **Retrofit + kotlinx.serialization** for HTTP, and **manual dependency injection — no DI framework**. MVVM, one ViewModel per screen. minSdk 26, target the current stable SDK.
 
 8. **Theme tokens are inherited from humblecoders.in and are not reinvented:** bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold accent `#f5c451` · radius `0.875rem` · Inter, with Caveat for the logo script. Dark theme only. Defined once in the Tailwind config and once in the Compose theme; never ad-hoc hex in a component.
 
@@ -319,9 +319,7 @@ These need a manager call before the tickets they affect can be drafted.
 
 **OD-3 — Location data retention.** How long do `track_points` live? *Recommendation: 90 days, then a scheduled purge, with the aggregate trail kept on the trip record. Cheap to implement and a good thing to have thought about.*
 
-**OD-4 — Session token lifetime.** Should a driver session expire on a timer, or only when the trip closes? *Recommendation: expire with the trip. A run is bounded, so the natural lifetime is the run.*
-
-**OD-5 — Vehicle records.** Should a trip reference a vehicle (registration, type, capacity)? *Recommendation: out of v1. It adds an entity and changes nothing about the core flows.*
+**OD-4 — Vehicle records.** Should a trip reference a vehicle (registration, type, capacity)? *Recommendation: out of v1. It adds an entity and changes nothing about the core flows.*
 
 ---
 
@@ -349,6 +347,9 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-23 | Android follows **MVVM** with one ViewModel per screen and a single `StateFlow<UiState>` | Compose and this layering assume it; writing it down stops two screens being built two different ways |
 | D-24 | Dependency injection is **manual** via an `AppContainer` and explicit ViewModel factories — no Hilt, no Koin | Keeps the wiring visible and readable for a teaching project, and removes an annotation processor from the build. The cost is boilerplate in `AppContainer`, accepted deliberately |
 | D-25 | A **second** Google key, restricted to the Maps JavaScript API and by HTTP referrer, is allowed in the browser purely to render maps | Interactive maps cannot be drawn server-side, and Google's terms forbid displaying Google route data on a non-Google basemap, so OpenStreetMap is not available to us. The key cannot call any billed-per-request endpoint, so the liability rule 3 protects against does not apply |
+| D-26 | A driver session token **expires with its trip** — when the trip completes or is cancelled (resolves former OD-4) | A run is naturally bounded, so the run is the natural session lifetime. No timer to tune, and no driver logged out mid-journey |
+| D-27 | Android HTTP is **Retrofit + kotlinx.serialization** | The conventional, best-documented Android choice, and it constructs cleanly by hand in `AppContainer`, which matters under manual DI |
+| D-28 | The driver app supports **both orientations** | Drivers use phone mounts in either orientation; the map screens in tickets 10 and 12 benefit from landscape |
 | D-16 | Route alternatives are fetched **before** stops are added; adding stops refines the one chosen route | Forced by the Routes API: alternatives and intermediate waypoints are mutually exclusive. The UI is built around this rather than fighting it |
 | D-17 | Booking codes are 6 characters from `A-Z2-9` minus `O` and `I`, SHA-256 hashed, single-use; a resend kills the previous code | Removes zero/one lookalikes for a driver reading an email in a cab. Same discipline as the booking project |
 | D-18 | Turn-by-turn navigation is delegated to Google Maps via intent | Building a navigation engine is a year of work and teaches nothing this project needs |
