@@ -1,0 +1,31 @@
+# Environment
+.env
+.env.local
+*.local
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Android
+*.iml
+.gradle/
+local.properties
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.keystore
+google-services.json
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
