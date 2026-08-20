@@ -211,6 +211,7 @@ Everything is an Edge Function. There are no public RPCs and no direct table acc
 | Endpoint | Purpose |
 |---|---|
 | `driver-verify` | Exchange a code for a session token plus the full run payload |
+| `driver-run` | Re-fetch the current run for a live session, so a device can refresh stale cached data |
 | `driver-start` | `pending` → `active` |
 | `driver-track` | Accept a batch of location fixes |
 | `driver-stop-event` | Record arrival at, or departure from, a break stop |
@@ -350,6 +351,7 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-26 | A driver session token **expires with its trip** — when the trip completes or is cancelled (resolves former OD-4) | A run is naturally bounded, so the run is the natural session lifetime. No timer to tune, and no driver logged out mid-journey |
 | D-27 | Android HTTP is **Retrofit + kotlinx.serialization** | The conventional, best-documented Android choice, and it constructs cleanly by hand in `AppContainer`, which matters under manual DI |
 | D-28 | The driver app supports **both orientations** | Drivers use phone mounts in either orientation; the map screens in tickets 10 and 12 benefit from landscape |
+| D-29 | The Android app gets its **own** map key — Maps SDK for Android only, restricted by package name and signing SHA-1 | Same reasoning as D-25, applied per platform. Three keys total: one billed server key held only by Edge Functions, and two render-only client keys that cannot call Places or Routes |
 | D-16 | Route alternatives are fetched **before** stops are added; adding stops refines the one chosen route | Forced by the Routes API: alternatives and intermediate waypoints are mutually exclusive. The UI is built around this rather than fighting it |
 | D-17 | Booking codes are 6 characters from `A-Z2-9` minus `O` and `I`, SHA-256 hashed, single-use; a resend kills the previous code | Removes zero/one lookalikes for a driver reading an email in a cab. Same discipline as the booking project |
 | D-18 | Turn-by-turn navigation is delegated to Google Maps via intent | Building a navigation engine is a year of work and teaches nothing this project needs |

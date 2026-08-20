@@ -38,7 +38,11 @@ Android  ──code, then session token──► Edge Functions
 2. **RLS is on with zero permissive policies** on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, `trip_stop_events`, `track_points`. The one exception is the Realtime read feed on `track_points` for the live map, gated by an authenticated supervisor JWT — **never** by the anon key. Do not add policies, grants, or RPCs without a manager-approved ticket.
 
 3. **No billed third-party key reaches a client.** The server Google key and the Resend key live in Supabase Edge Function secrets. The browser calls our `places-autocomplete` / `routes-preview`; those call Google. A leaked key that can drive Places or Routes is an unbounded liability.
-   **One narrow, documented exception:** a **second** Google key used only to render maps in the browser. It must be restricted by HTTP referrer **and** restricted to the **Maps JavaScript API alone** — it cannot call Places, Routes, or any billed-per-request endpoint. This exists because drawing an interactive map requires it and Google's terms forbid showing Google-derived routes on a non-Google basemap. Never widen this key's API restrictions, and never reuse the server key in a client.
+   **One narrow, documented exception: map-rendering keys.** Each client gets its own key that can *only* draw maps, never call a billed-per-request endpoint:
+   - **Web** — restricted by HTTP referrer, restricted to the **Maps JavaScript API** alone
+   - **Android** — restricted by package name + signing certificate SHA-1, restricted to **Maps SDK for Android** alone
+
+   This exists because drawing an interactive map requires a client-side key, and Google's terms forbid showing Google-derived routes on a non-Google basemap. Never widen either key's API restrictions, and never ship the server key in a client.
 
 4. **Route alternatives are fetched before stops exist.** The Google Routes API returns alternatives *only* when the request has no `intermediates`. So: A→B with `computeAlternativeRoutes: true` → supervisor picks one → stops are added → re-request that corridor with `intermediates` and alternatives off, yielding one refined route. Never request alternatives and waypoints together, and never let the UI imply three routes are still on offer once stops exist.
 
