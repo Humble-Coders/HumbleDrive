@@ -30,7 +30,7 @@ It forces every part of a modern stack into one product: a typed React frontend 
 - **G1** — A supervisor can plan a complete delivery run in under three minutes, from empty form to code sent.
 - **G2** — Route selection shows genuine alternatives with real distance and duration, not a single hardcoded path.
 - **G3** — A driver gets from "code in email" to "route on screen" in one step, with no account, no password, and no signup.
-- **G4** — The supervisor sees the driver's live position on a map while a run is active.
+- **G4** — After a run, the supervisor can replay exactly where the vehicle went and compare planned break times against actual. *(Live, real-time position was cut from v1 — see D-33.)*
 - **G5** — Location data survives loss of network. A tunnel or a dead zone degrades the trail's resolution, it does not create a permanent hole.
 - **G6** — Planned versus actual break time is visible for every stop after the run.
 - **G7** — Both surfaces work correctly on their intended form factors: the web app at 375 px, 768 px and 1280 px+, the Android app on a phone in a moving vehicle.
@@ -80,7 +80,6 @@ graph TB
         AUTH["Auth<br/>email + password"]
         FN["Edge Functions<br/>Deno TypeScript"]
         DB[("Postgres<br/>RLS on")]
-        RT["Realtime"]
         ST["Storage<br/>delivery photos"]
     end
 
@@ -92,7 +91,6 @@ graph TB
 
     WEB -->|"JWT"| AUTH
     WEB -->|"authorised calls"| FN
-    WEB -->|"subscribe: live position"| RT
     APP -->|"code / session token"| FN
     APP -->|"batched location fixes"| FN
     APP -->|"delivery photo"| FN
@@ -110,7 +108,7 @@ These are binding. Tickets that violate them get rejected.
 
 1. **The database is the enforcement layer; the UI is never.** One active run per driver, single-use codes, valid state transitions, and stop ordering are enforced by Postgres constraints and by logic inside the Edge Functions — not by disabling a button in React.
 
-2. **Row Level Security is on everywhere, with zero policies on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, and `track_points`.** All access flows through Edge Functions holding the service role key. The single exception is a Realtime read feed for the admin live map, and that feed is gated by an authenticated supervisor JWT — never by the anon key.
+2. **Row Level Security is on everywhere, with zero policies. No exceptions.** Every table — `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, `trip_stop_events`, `track_points` — is reachable only through Edge Functions holding the service role key. Dropping the live map (D-33) removed the one carve-out this rule used to carry.
 
 3. **No third-party API key ever reaches a client.** The Google Maps key and the Resend key live in Supabase Edge Function secrets. The browser calls `places-autocomplete` and `routes-preview` on our own backend; our backend calls Google. This is the single most important cost-protection decision in the project — a leaked Maps key with billing enabled is an unbounded liability.
 
@@ -118,7 +116,7 @@ These are binding. Tickets that violate them get rejected.
 
 5. **Codes are single-use and hashed at rest.** A code is generated only by the supervisor's "assign" or "resend" action, SHA-256 hashed before storage, and dead the moment it is redeemed. Plaintext codes are never logged, never stored, and never returned by any endpoint after the sending email is dispatched.
 
-6. **Frontend stack is locked:** Vite + React 18 + TypeScript in strict mode + Tailwind. Functional components and hooks only. No Redux, no MobX, no UI kit. `@supabase/supabase-js` for auth, RPC and realtime. React Router for routing.
+6. **Frontend stack is locked:** Vite + React 18 + TypeScript in strict mode + Tailwind. Functional components and hooks only. No Redux, no MobX, no UI kit. `@supabase/supabase-js` for auth. React Router for routing.
 
 7. **Android stack is locked:** Kotlin, Jetpack Compose, Maps SDK for Android, `FusedLocationProviderClient`, Room for the offline queue, **Retrofit + kotlinx.serialization** for HTTP, and **manual dependency injection — no DI framework**. MVVM, one ViewModel per screen. minSdk 26, target the current stable SDK.
 
@@ -259,7 +257,7 @@ Consignment reference, description, optional weight, receiver name, receiver pho
 
 ### 5.4 Supervisor — live tracking and history
 
-A dashboard listing runs by status. Opening an active run shows the planned polyline, the break stops, and the driver's live marker, updated over Supabase Realtime as new `track_points` arrive. Stops that have been reached show actual versus planned break time, with overruns flagged.
+A dashboard listing runs by status. Opening a run shows the planned polyline, the break stops, and — once the run is under way — the recorded trail, refreshed when the page is loaded or refreshed rather than pushed live (D-33). Stops that have been reached show actual versus planned break time, with overruns flagged.
 
 A completed run shows the same view frozen, plus the full breadcrumb trail and the delivery photo.
 
@@ -296,7 +294,7 @@ This is the hardest part of the build and the part most likely to be got wrong.
 
 **Responsiveness.** The admin web app is an acceptance criterion at 375 px, 768 px and 1280 px+, not a nice-to-have. The planning wizard's map-plus-list layout stacks vertically below 768 px.
 
-**Performance.** Autocomplete suggestions within roughly 400 ms of the debounce firing. Route preview within roughly 2 s. The live marker within roughly 5 s of a fix reaching the server.
+**Performance.** Autocomplete suggestions within roughly 400 ms of the debounce firing. Route preview within roughly 2 s. Trip detail, including a full trail, within roughly 2 s.
 
 **Reliability.** No location fix is lost to a transient network failure. A crash or force-close mid-run resumes cleanly from the Room queue and the cached run.
 
@@ -318,7 +316,7 @@ These need a manager call before the tickets they affect can be drafted. **Numbe
 
 **OD-2 — Push notifications to the driver.** Should assignment and cancellation notify the phone, or is email plus opening the app sufficient? *Recommendation: out of v1. FCM is a meaningful chunk of work for little demo value here.*
 
-**OD-3 — Location data retention.** How long do `track_points` live? *Recommendation: 90 days, then a scheduled purge, with the aggregate trail kept on the trip record. Cheap to implement and a good thing to have thought about.*
+**OD-3 — Location data retention. ✅ RESOLVED** → 90 days, then a scheduled purge. See decision **D-34**.
 
 **OD-4 — Session token lifetime. ✅ RESOLVED** → expires with its trip. See decision **D-26**.
 
@@ -335,13 +333,13 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-1 | Built as a teaching and portfolio project, not a commercial product | Sets the bar: realistic engineering, no compliance obligations, small user counts |
 | D-2 | A run carries exactly one consignment, source to destination | Keeps the model honest without turning into a logistics ERP |
 | D-3 | Intermediate stops are driver rest, food and fuel breaks with a planned duration — **not** delivery points | This is the defining domain decision. Nothing is loaded or unloaded at a stop |
-| D-4 | Live GPS tracking is in v1, in simple form | Live marker for the supervisor; no geofenced auto-completion, no replay, no live ETA. This is the core Android engineering and is worth proving early |
+| D-4 | GPS tracking is in v1, in simple form | The driver app records the trail; the supervisor reviews it after the fact. No geofenced auto-completion, no live ETA. Superseded in part by D-33 |
 | D-5 | Drivers are created by supervisors; no self-registration | Mirrors the booking-code pattern already proven at Humble Coders |
 | D-6 | Consignment data is light: reference, description, optional weight, receiver name and phone | Enough to be realistic, not enough to become a manifest system |
 | D-7 | Delivery is confirmed by a tap plus one photo, at the destination only | Demonstrates Android file upload and Supabase Storage; a delivery app with no proof feels hollow |
 | D-8 | Break durations are tracked and displayed, never enforced | Planned versus actual is visible to the supervisor. Blocking a driver from resuming would be frustrating and hard to demo |
 | D-9 | The app queues location fixes and status changes locally in Room and syncs when connectivity returns | Highway connectivity is unreliable by default. Online-only would put permanent holes in every trail |
-| D-10 | Backend is Supabase: Postgres, Auth, Edge Functions, Realtime, Storage | Team already runs this stack; Realtime is precisely what the live marker needs; Storage covers the photo |
+| D-10 | Backend is Supabase: Postgres, Auth, Edge Functions, Storage | Team already runs this stack, and Storage covers the delivery photo. Realtime is no longer used (D-33) |
 | D-11 | Supervisor auth is Supabase Auth email + password, **invite only, with no signup route** | Nobody can register themselves into a dispatch system. An `admins` table gates access on top of authentication |
 | D-12 | All Google Maps API calls are proxied through Edge Functions; the key never reaches a client | A leaked key with billing enabled is an unbounded liability. The proxy also enables caching and rate limiting |
 | D-13 | Admin web app deploys to Vercel | Already in use at Humble Coders; push-to-deploy, custom subdomain, free tier is ample |
@@ -357,6 +355,8 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-30 | The driver app is distributed via **Play Console internal testing or direct APK**, not a public Play Store listing (resolves OD-1) | A public listing needs a background-location justification and a demo video, and the review routinely takes weeks and fails first time. Wrong risk for a teaching project; a public release can be its own later project |
 | D-31 | Location sampling is **5 s / 10 m at high accuracy**, flushed to the server in batches every 15–30 s | Smooth trail at acceptable drain for a mounted phone that is usually charging. Easy to relax later; hard to explain a jagged trail now |
 | D-32 | Service survival uses **both** a battery-optimisation exemption prompt **and** a WorkManager watchdog that restarts a service that should be running | The prompt is refusable and some OEMs kill services regardless, so neither mechanism alone is sufficient |
+| D-33 | **The supervisor's live map is cut from v1.** Trails are reviewed after the fact, not watched in real time | Manager's call. It removes Supabase Realtime from the stack and, with it, the only RLS policy the system would have needed — rule 2 becomes absolute. The driver app still records everything, so live viewing can be added later without changing the data model |
+| D-34 | `track_points` are retained **90 days**, then purged by a scheduled job; the trip and its summary survive (resolves OD-3) | Detailed movement data on real people needs a stated reason and an end date. Cheap to state now, awkward to retrofit once real trails exist |
 | D-16 | Route alternatives are fetched **before** stops are added; adding stops refines the one chosen route | Forced by the Routes API: alternatives and intermediate waypoints are mutually exclusive. The UI is built around this rather than fighting it |
 | D-17 | Booking codes are 6 characters from `A-Z2-9` minus `O` and `I`, SHA-256 hashed, single-use; a resend kills the previous code | Removes zero/one lookalikes for a driver reading an email in a cab. Same discipline as the booking project |
 | D-18 | Turn-by-turn navigation is delegated to Google Maps via intent | Building a navigation engine is a year of work and teaches nothing this project needs |
@@ -376,7 +376,7 @@ Each phase ends somewhere demoable.
 3. **Planning wizard** — all four steps, plus driver management. Ends with a real code landing in a real inbox.
 4. **Driver app, static** — code entry, session token, run display from cache. End to end with no tracking yet.
 5. **Driver app, tracking** — foreground service, Room queue, batched upload, the permission ladder. The hardest phase; budget accordingly.
-6. **Live map** — supervisor Realtime view, break-stop events, planned versus actual.
+6. **Trip history** — recorded trail replay, break-stop events, planned versus actual.
 7. **Completion and history** — delivery photo, trip detail, breadcrumb replay.
 
 Phases 1–4 give a demoable end-to-end system. Phase 5 is where the real engineering time goes.
