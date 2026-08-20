@@ -312,15 +312,17 @@ This is the hardest part of the build and the part most likely to be got wrong.
 
 ## 7. Open Decisions
 
-These need a manager call before the tickets they affect can be drafted.
+These need a manager call before the tickets they affect can be drafted. **Numbers are never reused or renumbered** — resolved items stay in place so that tickets referencing them keep pointing at the right thing.
 
-**OD-1 — Android distribution.** A public Play Store release requires a background-location justification, a demo video, and a review that routinely takes weeks and is routinely rejected on the first attempt. *Recommendation: distribute via Play Console internal testing or direct APK for v1, and treat a public release as a separate later project.*
+**OD-1 — Android distribution. ✅ RESOLVED** → internal testing / direct APK. See decision **D-30**.
 
 **OD-2 — Push notifications to the driver.** Should assignment and cancellation notify the phone, or is email plus opening the app sufficient? *Recommendation: out of v1. FCM is a meaningful chunk of work for little demo value here.*
 
 **OD-3 — Location data retention.** How long do `track_points` live? *Recommendation: 90 days, then a scheduled purge, with the aggregate trail kept on the trip record. Cheap to implement and a good thing to have thought about.*
 
-**OD-4 — Vehicle records.** Should a trip reference a vehicle (registration, type, capacity)? *Recommendation: out of v1. It adds an entity and changes nothing about the core flows.*
+**OD-4 — Session token lifetime. ✅ RESOLVED** → expires with its trip. See decision **D-26**.
+
+**OD-5 — Vehicle records.** Should a trip reference a vehicle (registration, type, capacity)? *Recommendation: out of v1. It adds an entity and changes nothing about the core flows.*
 
 ---
 
@@ -352,6 +354,9 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-27 | Android HTTP is **Retrofit + kotlinx.serialization** | The conventional, best-documented Android choice, and it constructs cleanly by hand in `AppContainer`, which matters under manual DI |
 | D-28 | The driver app supports **both orientations** | Drivers use phone mounts in either orientation; the map screens in tickets 10 and 12 benefit from landscape |
 | D-29 | The Android app gets its **own** map key — Maps SDK for Android only, restricted by package name and signing SHA-1 | Same reasoning as D-25, applied per platform. Three keys total: one billed server key held only by Edge Functions, and two render-only client keys that cannot call Places or Routes |
+| D-30 | The driver app is distributed via **Play Console internal testing or direct APK**, not a public Play Store listing (resolves OD-1) | A public listing needs a background-location justification and a demo video, and the review routinely takes weeks and fails first time. Wrong risk for a teaching project; a public release can be its own later project |
+| D-31 | Location sampling is **5 s / 10 m at high accuracy**, flushed to the server in batches every 15–30 s | Smooth trail at acceptable drain for a mounted phone that is usually charging. Easy to relax later; hard to explain a jagged trail now |
+| D-32 | Service survival uses **both** a battery-optimisation exemption prompt **and** a WorkManager watchdog that restarts a service that should be running | The prompt is refusable and some OEMs kill services regardless, so neither mechanism alone is sufficient |
 | D-16 | Route alternatives are fetched **before** stops are added; adding stops refines the one chosen route | Forced by the Routes API: alternatives and intermediate waypoints are mutually exclusive. The UI is built around this rather than fighting it |
 | D-17 | Booking codes are 6 characters from `A-Z2-9` minus `O` and `I`, SHA-256 hashed, single-use; a resend kills the previous code | Removes zero/one lookalikes for a driver reading an email in a cab. Same discipline as the booking project |
 | D-18 | Turn-by-turn navigation is delegated to Google Maps via intent | Building a navigation engine is a year of work and teaches nothing this project needs |
