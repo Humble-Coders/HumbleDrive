@@ -110,7 +110,7 @@ These are binding. Tickets that violate them get rejected.
 
 1. **The database is the enforcement layer; the UI is never.** One active run per driver, single-use codes, valid state transitions, and stop ordering are enforced by Postgres constraints and by logic inside the Edge Functions — not by disabling a button in React.
 
-2. **Row Level Security is on everywhere, with zero policies on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, and `track_points`.** All access flows through Edge Functions holding the service role key. The single exception is a Realtime read feed for the admin live map, and that feed is gated by an authenticated supervisor JWT — never by the anon key.
+2. **Row Level Security is on everywhere, with zero policies on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, and `track_points`.** All access flows through Edge Functions holding the **secret key**. The single exception is a Realtime read feed for the admin live map, and that feed is gated by an authenticated supervisor JWT — never by the publishable key.
 
 3. **No third-party API key ever reaches a client.** The Google Maps key and the Resend key live in Supabase Edge Function secrets. The browser calls `places-autocomplete` and `routes-preview` on our own backend; our backend calls Google. This is the single most important cost-protection decision in the project — a leaked Maps key with billing enabled is an unbounded liability.
 
@@ -363,6 +363,8 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-36 | Delivery photos are **purged with the trail at 90 days** (extends D-34); the trip keeps a flag that a photo existed | One uniform retention policy, and the least personal data held. The trade-off is accepted knowingly: a dispute after 90 days has no photographic evidence |
 | D-37 | v1 is served on the **Vercel default domain**; a `humblecoders.in` subdomain is deferred | No DNS work needed to ship. The URL is provisional-looking, which is acceptable for a teaching project and trivially changed later |
 | D-38 | `humblecoders.in` is **verified in Resend** and `FROM_EMAIL` is a real address on it before launch | Test mode delivers to one address only, so no real driver could ever be onboarded. DNS propagation takes hours, so this starts well before T15 |
+| D-39 | Supabase keys use the **current publishable / secret naming**, not the legacy `anon` / `service_role` JWTs | It is what the dashboard shows. Docs that disagree with the console are how the wrong key ends up pasted into a client |
+| D-40 | The Supabase project lives in **ap-south-1 (Mumbai)** | Drivers, addresses and supervisors are all in India, and region cannot be changed after creation. Caught while the database was still empty, so the correction was free |
 | D-16 | Route alternatives are fetched **before** stops are added; adding stops refines the one chosen route | Forced by the Routes API: alternatives and intermediate waypoints are mutually exclusive. The UI is built around this rather than fighting it |
 | D-17 | Booking codes are 6 characters from `A-Z2-9` minus `O` and `I`, SHA-256 hashed, single-use; a resend kills the previous code | Removes zero/one lookalikes for a driver reading an email in a cab. Same discipline as the booking project |
 | D-18 | Turn-by-turn navigation is delegated to Google Maps via intent | Building a navigation engine is a year of work and teaches nothing this project needs |

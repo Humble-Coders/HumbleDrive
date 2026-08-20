@@ -35,7 +35,7 @@ Android  ──code, then session token──► Edge Functions
 
 1. **The database is the enforcement layer; the UI is never.** One active run per driver (partial unique index on `driver_id where status in ('pending','active')`), single-use hashed codes, valid state transitions, lowercase driver emails, and `(route_id, seq)` stop ordering are Postgres constraints plus server-side checks. A disabled button is a UX hint, never a guarantee. Any schema change must preserve all of these.
 
-2. **RLS is on with zero permissive policies** on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, `trip_stop_events`, `track_points`. The one exception is the Realtime read feed on `track_points` for the live map, gated by an authenticated supervisor JWT — **never** by the anon key. Do not add policies, grants, or RPCs without a manager-approved ticket.
+2. **RLS is on with zero permissive policies** on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, `trip_stop_events`, `track_points`. The one exception is the Realtime read feed on `track_points` for the live map, gated by an authenticated supervisor JWT — **never** by the publishable key. Do not add policies, grants, or RPCs without a manager-approved ticket.
 
 3. **No billed third-party key reaches a client.** The server Google key and the Resend key live in Supabase Edge Function secrets. The browser calls our `places-autocomplete` / `routes-preview`; those call Google. A leaked key that can drive Places or Routes is an unbounded liability.
    **One narrow, documented exception: map-rendering keys.** Each client gets its own key that can *only* draw maps, never call a billed-per-request endpoint:
@@ -88,7 +88,8 @@ Android  ──code, then session token──► Edge Functions
 
 ### Data & security
 - **Driver emails are lowercase, always** — `check (email = lower(btrim(email)))`. Two casings of one address are two driver records for one human, and every per-driver invariant silently breaks. Never insert mixed-case rows by hand.
-- **Secrets never enter the repo.** `GOOGLE_MAPS_API_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY` live in Supabase edge-function secrets (`supabase secrets set`). Client config is only `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (public, still via `.env`, with `.env.example` committed). Android ships only the Supabase URL and anon key.
+- **Secrets never enter the repo.** `GOOGLE_MAPS_API_KEY`, `RESEND_API_KEY`, `FROM_EMAIL` and the **Supabase secret key** live in Supabase edge-function secrets (`supabase secrets set`). Client config is only `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` (public by design, still via `.env`, with `.env.example` committed). Android ships only the Supabase URL and publishable key.
+- **Key naming follows Supabase's current scheme** (D-39): **publishable** key for clients, **secret** key for server-side. These replace the legacy `anon` / `service_role` JWTs. Use the names the dashboard shows, so nobody has to translate between the docs and the console.
 - Delivery photos go to a **private** Storage bucket, served via short-lived signed URLs.
 - `trips-create` writes route + stops + trip in **one transaction**. If the email then fails, the trip persists as awaiting-code with a resend action — never leave partial plan state behind.
 - Edge functions are Deno TypeScript; keep them dependency-light (`@supabase/supabase-js` only).
