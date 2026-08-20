@@ -108,5 +108,5 @@ Process doc: **[docs/PROCESS.md](docs/PROCESS.md)**. Flow: Product Owner `/draft
 
 - **Spec:** [docs/PRD.md](docs/PRD.md) — includes the trip state machine, full data model, and the binding Decision Log
 - **External systems:** Supabase project (Postgres · Auth · Edge Functions · Realtime · Storage) · Google Maps Platform (Places + Routes, billing enabled — watch quotas) · Resend (needs humblecoders.in verified)
-- **Deploy:** `web/` → Vercel on merge to `main` · edge functions → `supabase functions deploy` (manual) · Android → built from tagged commits, distribution per PRD open decision OD-1
+- **Deploy:** `web/` → Vercel on merge to `main`, default Vercel domain (D-37) · edge functions → `supabase functions deploy` (manual) · Android → built from tagged commits, distributed via internal testing / direct APK (D-30)
 - **Open decisions still unsettled** (PRD §7): OD-1 Play Store vs internal testing · OD-2 push notifications · OD-3 location retention · OD-4 session lifetime · OD-5 vehicle records
