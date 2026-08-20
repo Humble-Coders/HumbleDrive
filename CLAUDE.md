@@ -60,8 +60,19 @@ Android  ──code, then session token──► Edge Functions
 - **Theme tokens** (inherited from humblecoders.in, do not invent colors): bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold `#f5c451` · radius `0.875rem` · Inter (logo script: Caveat). Dark theme only. Defined **once** in `tailwind.config.ts` — never an ad-hoc hex in a component.
 
 ### Android (`android/`)
-- Kotlin + Jetpack Compose + Maps SDK + Room + Hilt. minSdk 26, target current stable.
+- Kotlin + Jetpack Compose + Maps SDK + Room. minSdk 26, target current stable. **No DI framework** — see manual DI below.
 - **Single `:app` module, layered packages: `data/` → `domain/` ← `ui/`, plus `service/`.** Dependencies point one way only: `ui` and `data` may depend on `domain`; `domain` depends on neither. No Android framework types in `domain`.
+
+- **MVVM, strictly.** One ViewModel per screen.
+  - **View** — Compose composables only. No business logic, no repository calls, no `suspend` work. They render state and emit events upward.
+  - **ViewModel** — exposes a single `StateFlow<UiState>` where `UiState` models loading, empty, error and content **explicitly** (no scattered `isLoading` booleans). Survives rotation. Holds no `Context`, no Compose types, no Android framework imports beyond `ViewModel` itself.
+  - **Model** — `domain/` holds plain Kotlin models and use cases with zero Android imports. `data/` holds repositories that are the **only** things touching Room, Retrofit/Ktor, or `SharedPreferences`. A ViewModel never touches a DAO or an HTTP client directly.
+- **Manual dependency injection. No Hilt, no Koin, no annotation processors.**
+  - A single `AppContainer`, constructed once in `Application.onCreate()`, owns the long-lived singletons: the Room database, the HTTP client, the token store, and every repository. Dependencies are constructed there and passed down as constructor parameters.
+  - ViewModels are created through an explicit `ViewModelProvider.Factory` that takes what it needs from `AppContainer`. Use `viewModel(factory = ...)` in composables — never `hiltViewModel()`, never a ViewModel with a no-arg constructor reaching for a global.
+  - `AppContainer` is reachable only via the `Application` instance. No `object` singletons holding state, and no static service locator that any class can call from anywhere — that is the thing manual DI is supposed to avoid, and it is easy to drift into.
+  - Every dependency is an **interface** in `domain/` with its implementation in `data/`, so a ViewModel can be unit-tested with a fake and no Android runtime.
+- **The location foreground service is outside MVVM.** It has no ViewModel and no UI, outlives every screen, and pulls its dependencies from `AppContainer` directly. Do not give it a ViewModel.
 - **Location tracking is a foreground service** with `foregroundServiceType="location"` and a persistent notification. Without it Android stops delivering fixes the moment the screen sleeps — which is most of the run. Tracking runs *only* while a trip is `active`.
 - **Every location fix is written to Room first**, then flushed to `driver-track` in batches; rows are deleted only on server acknowledgement. Treat the network as unreliable by default, because on a highway it is.
 - `recorded_at` (device clock) and `received_at` (server clock) are both stored and are frequently hours apart. Order trails by `recorded_at`.

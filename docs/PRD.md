@@ -120,7 +120,7 @@ These are binding. Tickets that violate them get rejected.
 
 6. **Frontend stack is locked:** Vite + React 18 + TypeScript in strict mode + Tailwind. Functional components and hooks only. No Redux, no MobX, no UI kit. `@supabase/supabase-js` for auth, RPC and realtime. React Router for routing.
 
-7. **Android stack is locked:** Kotlin, Jetpack Compose, Maps SDK for Android, `FusedLocationProviderClient`, Room for the offline queue, Retrofit or Ktor for HTTP, Hilt for DI. minSdk 26, target the current stable SDK.
+7. **Android stack is locked:** Kotlin, Jetpack Compose, Maps SDK for Android, `FusedLocationProviderClient`, Room for the offline queue, Retrofit or Ktor for HTTP, and **manual dependency injection — no DI framework**. MVVM, one ViewModel per screen. minSdk 26, target the current stable SDK.
 
 8. **Theme tokens are inherited from humblecoders.in and are not reinvented:** bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold accent `#f5c451` · radius `0.875rem` · Inter, with Caveat for the logo script. Dark theme only. Defined once in the Tailwind config and once in the Compose theme; never ad-hoc hex in a component.
 
@@ -346,6 +346,8 @@ Every locked choice, with the reasoning that produced it. This log is binding: c
 | D-13 | Admin web app deploys to Vercel | Already in use at Humble Coders; push-to-deploy, custom subdomain, free tier is ample |
 | D-14 | Frontend is Vite + React 18 + TypeScript strict + Tailwind, no UI kit, no state library | Matches the existing Humble Coders stack and keeps the learning surface on React itself |
 | D-15 | Android is Kotlin + Jetpack Compose + Maps SDK + Room, minSdk 26 | Background location makes cross-platform frameworks painful; native is the right call here |
+| D-23 | Android follows **MVVM** with one ViewModel per screen and a single `StateFlow<UiState>` | Compose and this layering assume it; writing it down stops two screens being built two different ways |
+| D-24 | Dependency injection is **manual** via an `AppContainer` and explicit ViewModel factories — no Hilt, no Koin | Keeps the wiring visible and readable for a teaching project, and removes an annotation processor from the build. The cost is boilerplate in `AppContainer`, accepted deliberately |
 | D-16 | Route alternatives are fetched **before** stops are added; adding stops refines the one chosen route | Forced by the Routes API: alternatives and intermediate waypoints are mutually exclusive. The UI is built around this rather than fighting it |
 | D-17 | Booking codes are 6 characters from `A-Z2-9` minus `O` and `I`, SHA-256 hashed, single-use; a resend kills the previous code | Removes zero/one lookalikes for a driver reading an email in a cab. Same discipline as the booking project |
 | D-18 | Turn-by-turn navigation is delegated to Google Maps via intent | Building a navigation engine is a year of work and teaches nothing this project needs |
