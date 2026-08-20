@@ -22,6 +22,7 @@ handoffs/             ← finished-ticket reports
 
 ```
 Admin web ──JWT──► Edge Functions ──service role──► Postgres
+    └──Realtime (authenticated)──► track_points
 Android  ──code, then session token──► Edge Functions
                     Edge Functions ──► Google Places · Google Routes · Resend · Storage
 ```
@@ -34,7 +35,7 @@ Android  ──code, then session token──► Edge Functions
 
 1. **The database is the enforcement layer; the UI is never.** One active run per driver (partial unique index on `driver_id where status in ('pending','active')`), single-use hashed codes, valid state transitions, lowercase driver emails, and `(route_id, seq)` stop ordering are Postgres constraints plus server-side checks. A disabled button is a UX hint, never a guarantee. Any schema change must preserve all of these.
 
-2. **RLS is on with zero policies, on every table, with no exceptions** — `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, `trip_stop_events`, `track_points`. Everything goes through Edge Functions holding the service role key. Cutting the live map (PRD D-33) removed the one carve-out this rule used to carry, so `pg_policies` must return **zero rows** for our schema, permanently. Do not add policies, grants, or RPCs without a manager-approved ticket.
+2. **RLS is on with zero permissive policies** on `drivers`, `routes`, `route_stops`, `trips`, `driver_sessions`, `trip_stop_events`, `track_points`. The one exception is the Realtime read feed on `track_points` for the live map, gated by an authenticated supervisor JWT — **never** by the anon key. Do not add policies, grants, or RPCs without a manager-approved ticket.
 
 3. **No billed third-party key reaches a client.** The server Google key and the Resend key live in Supabase Edge Function secrets. The browser calls our `places-autocomplete` / `routes-preview`; those call Google. A leaked key that can drive Places or Routes is an unbounded liability.
    **One narrow, documented exception: map-rendering keys.** Each client gets its own key that can *only* draw maps, never call a billed-per-request endpoint:
@@ -58,7 +59,7 @@ Android  ──code, then session token──► Edge Functions
 ## Key rules
 
 ### Frontend (`web/`)
-- Stack is locked: Vite + React 18 + TypeScript **strict** + Tailwind. Functional components and hooks only. **No** Redux/MobX, **no** UI kit. `@supabase/supabase-js` for auth.
+- Stack is locked: Vite + React 18 + TypeScript **strict** + Tailwind. Functional components and hooks only. **No** Redux/MobX, **no** UI kit. `@supabase/supabase-js` for auth and realtime.
 - **There is no signup route.** Supervisors are created in the Supabase dashboard with a matching `admins` row. An authenticated user without an active `admins` row is signed out immediately.
 - **Responsive is an acceptance criterion**, not a nice-to-have: 375 px, 768 px, 1280 px+. The wizard's map+list layout stacks below 768 px.
 - **Theme tokens** (inherited from humblecoders.in, do not invent colors): bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold `#f5c451` · radius `0.875rem` · Inter (logo script: Caveat). Dark theme only. Defined **once** in `tailwind.config.ts` — never an ad-hoc hex in a component.
@@ -106,6 +107,6 @@ Process doc: **[docs/PROCESS.md](docs/PROCESS.md)**. Flow: Product Owner `/draft
 ## References
 
 - **Spec:** [docs/PRD.md](docs/PRD.md) — includes the trip state machine, full data model, and the binding Decision Log
-- **External systems:** Supabase project (Postgres · Auth · Edge Functions · Storage) · Google Maps Platform (Places + Routes, billing enabled — watch quotas) · Resend (needs humblecoders.in verified)
+- **External systems:** Supabase project (Postgres · Auth · Edge Functions · Realtime · Storage) · Google Maps Platform (Places + Routes, billing enabled — watch quotas) · Resend (needs humblecoders.in verified)
 - **Deploy:** `web/` → Vercel on merge to `main` · edge functions → `supabase functions deploy` (manual) · Android → built from tagged commits, distribution per PRD open decision OD-1
 - **Open decisions still unsettled** (PRD §7): OD-1 Play Store vs internal testing · OD-2 push notifications · OD-3 location retention · OD-4 session lifetime · OD-5 vehicle records
