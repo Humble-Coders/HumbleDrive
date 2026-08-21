@@ -13,9 +13,10 @@ them. `_shared/auth.ts` is the gate: the caller's JWT is verified first, then an
 `admins` row is required, because a Supabase Auth account is not a supervisor. Two
 Supabase clients are exposed and named so they cannot be confused — `callerClient(req)`
 proves identity and does nothing else, `serviceClient()` reads data and bypasses RLS.
-The closed error contract from PRD §4.7 is encoded as a TypeScript union with an
-exhaustive status map, so an invented code and a code missing a status both fail
-`deno check` rather than review. `admin-me` is deployed and verified against the live
+The closed error contract from PRD §4.7 is encoded as a TypeScript union whose
+status map is exhaustive over supervisor and platform codes, so an invented code
+and a supervisor code missing a status both fail `deno check` rather than review.
+Driver codes sit outside that map until ticket 9 gives them statuses. `admin-me` is deployed and verified against the live
 project with both a supervisor and a non-supervisor account.
 
 36 tests pass under `--deny-net --cached-only` with every Supabase variable unset.

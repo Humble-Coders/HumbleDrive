@@ -2,9 +2,17 @@
 // means updating the PRD and CLAUDE.md rule 7 in the same change, because both
 // clients have to render every code with copy a driver or supervisor can act on.
 //
-// The typing does the enforcing twice. An invented string is not assignable to
-// ErrorCode, and a code added to the union without a status breaks ERROR_STATUS's
-// exhaustiveness. Both fail `deno check` rather than review.
+// The typing does the enforcing twice, and it is worth being precise about which
+// two things, because a later ticket will trust this without re-testing it:
+//
+//   - An invented string is not assignable to MappedErrorCode, so it cannot be
+//     passed to errorResponse().
+//   - A supervisor or platform code added to the union without a status breaks
+//     ERROR_STATUS's exhaustiveness, and removing a status breaks DEFAULT_MESSAGE.
+//
+// Driver codes are deliberately outside that map until ticket 9 gives them
+// statuses alongside the endpoints that raise them. Everything above fails
+// `deno check` rather than review.
 
 /** Returned to the supervisor web app. */
 export type SupervisorErrorCode =
@@ -37,9 +45,12 @@ export type PlatformErrorCode = "internal_error";
 
 export type ErrorCode = SupervisorErrorCode | DriverErrorCode | PlatformErrorCode;
 
-/** HTTP status per code. Driver-only codes are mapped in ticket 9, alongside the
- *  endpoints that raise them — assigning statuses to codes nothing emits yet
- *  would be guessing. */
+/** HTTP status per code.
+ *
+ *  The `satisfies` target is exhaustive over supervisor and platform codes on
+ *  purpose: adding one without a status must not compile. It excludes driver
+ *  codes, which ticket 9 maps alongside the endpoints that raise them —
+ *  assigning statuses to codes nothing emits yet would be guessing. */
 export const ERROR_STATUS = {
   bad_request: 400,
   unauthorized: 401,
@@ -52,7 +63,7 @@ export const ERROR_STATUS = {
   places_failed: 502,
   routes_failed: 502,
   email_failed: 502,
-} as const satisfies Partial<Record<ErrorCode, number>>;
+} as const satisfies Record<SupervisorErrorCode | PlatformErrorCode, number>;
 
 /** The codes this ticket can actually return. */
 export type MappedErrorCode = keyof typeof ERROR_STATUS;

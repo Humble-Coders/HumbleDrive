@@ -164,8 +164,18 @@ deno task test
 Run from `supabase/functions` — that is where `deno.json` lives.
 
 `deno task test:offline` adds `--deny-net --cached-only`, proving the suite needs
-neither the network nor a Supabase project. Also available: `deno task check`
-(types), `deno task lint`, `deno task fmt`.
+neither the network nor a Supabase project:
+
+```bash
+deno task test:offline
+```
+
+**Run `deno task test` once first on a fresh clone.** `deno.lock` pins what gets
+resolved, but it does not populate the module cache, and `--cached-only` fails
+on an empty one — which looks like a broken suite rather than a cold cache.
+`deno cache **/*.test.ts` does the same job if you'd rather not run the tests.
+
+Also available: `deno task check` (types), `deno task lint`, `deno task fmt`.
 
 ### Deploying
 
