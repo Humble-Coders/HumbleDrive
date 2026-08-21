@@ -76,6 +76,43 @@ export const strings = {
     close: "Close",
   },
 
+  drivers: {
+    title: "Drivers",
+    description: "The people you can assign runs to. Drivers never sign in — they get a code by email.",
+    add: "Add driver",
+    edit: "Edit",
+    filter: "Search drivers",
+    filterPlaceholder: "Name, email or phone",
+    name: "Name",
+    email: "Email",
+    phone: "Phone",
+    phoneHint: "10-digit Indian mobile. Spaces and +91 are fine.",
+    status: "Status",
+    currentRun: "Current run",
+    actions: "Actions",
+    active: "Active",
+    inactive: "Inactive",
+    free: "Free",
+    deactivate: "Deactivate",
+    reactivate: "Reactivate",
+    addTitle: "Add a driver",
+    editTitle: "Edit driver",
+    // Editing an email is allowed at any time, but a pending code went to the
+    // old address, so the supervisor has to know a resend is needed.
+    emailChangeWarning:
+      "This driver has a code waiting. Changing their email means the code they were sent no longer reaches them — resend it from the trip.",
+    deactivateTitle: "Deactivate this driver?",
+    deactivateBody:
+      "They stay in the list and keep their history, but you won't be able to assign them new runs.",
+    // There is no delete, anywhere. Trips reference drivers and a completed run
+    // has to keep naming who drove it.
+    empty: "No drivers yet",
+    emptyBody: "Add the first driver and they'll be available when you plan a run.",
+    noMatches: "No drivers match your search",
+    noMatchesBody: "Try a different name, email or phone number.",
+    clearFilter: "Clear search",
+  },
+
   placeholder: {
     // Stub pages name the ticket that fills them, so an empty screen reads as
     // "not built yet" rather than "broken".

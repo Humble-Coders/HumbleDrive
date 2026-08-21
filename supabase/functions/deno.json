@@ -3,7 +3,7 @@
   "tasks": {
     "test": "deno test --allow-env",
     "test:offline": "deno test --allow-env --deny-net --cached-only",
-    "check": "deno check _shared/*.ts admin-me/*.ts",
+    "check": "deno check _shared/*.ts admin-me/*.ts drivers/*.ts",
     "lint": "deno lint",
     "fmt": "deno fmt"
   },

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { AppShell } from "./routes/AppShell";
 import { Login } from "./routes/Login";
 import { Stub } from "./routes/Stub";
+import { Drivers } from "./routes/Drivers";
 import { NotFound } from "./routes/NotFound";
 import { LoadingState } from "./components/ui";
 import { strings } from "./strings";
@@ -63,7 +64,7 @@ export function App() {
           <Route path="/login" element={<LoginRoute />} />
           <Route element={<Protected />}>
             <Route index element={<Navigate to="/trips" replace />} />
-            <Route path="/drivers" element={<Stub title={strings.nav.drivers} note={strings.placeholder.drivers} />} />
+            <Route path="/drivers" element={<Drivers />} />
             <Route path="/plan" element={<Stub title={strings.nav.plan} note={strings.placeholder.plan} />} />
             <Route path="/trips" element={<Stub title={strings.nav.trips} note={strings.placeholder.trips} />} />
             <Route path="/trips/:id" element={<Stub title={strings.nav.trips} note={strings.placeholder.tripDetail} />} />

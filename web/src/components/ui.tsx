@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 
 /**
  * The shared primitives.
@@ -169,5 +169,54 @@ export function LoadingState({ label }: { label: string }) {
       <Spinner />
       {label}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ Dialog */
+
+
+/**
+ * Native <dialog>, opened with showModal().
+ *
+ * Deliberately not hand-rolled: the platform gives us the focus trap, the
+ * backdrop, Escape-to-close and inert background for free, and every one of
+ * those is a thing a custom overlay gets subtly wrong.
+ */
+export function Dialog({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open && !el.open) el.showModal();
+    if (!open && el.open) el.close();
+  }, [open]);
+
+  return (
+    <dialog
+      ref={ref}
+      onClose={onClose}
+      // Clicking the backdrop closes; clicking the panel must not.
+      onClick={(e) => {
+        if (e.target === ref.current) onClose();
+      }}
+      aria-label={title}
+      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-[var(--radius-token)] border border-edge bg-card p-0 text-text backdrop:bg-black/60"
+    >
+      <div className="p-5">
+        <h2 className="mb-4 text-lg font-semibold">{title}</h2>
+        {children}
+      </div>
+    </dialog>
   );
 }
