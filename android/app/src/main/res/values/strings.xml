@@ -37,6 +37,15 @@
     <string name="run_refresh">Refresh</string>
     <string name="run_cached">Showing saved details — you\'re offline.</string>
     <string name="run_call">Call</string>
+    <string name="run_journey">Journey</string>
+    <string name="run_ready">Ready to go</string>
+    <string name="run_stop_count">%1$d planned stops</string>
+    <string name="run_stop_count_one">1 planned stop</string>
+    <string name="run_no_stops_short">No planned stops</string>
+    <string name="run_weight">Weight</string>
+    <string name="run_ref">Reference</string>
+    <string name="run_details">Details</string>
+    <string name="run_phone">Phone</string>
 
     <string name="stop_break">Rest</string>
     <string name="stop_food">Food</string>

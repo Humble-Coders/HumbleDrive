@@ -1,8 +1,11 @@
 package com.humblecoders.humbledrive.ui.code
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -20,8 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.humblecoders.humbledrive.R
 import com.humblecoders.humbledrive.domain.RunError
+import com.humblecoders.humbledrive.ui.theme.Brand
 import com.humblecoders.humbledrive.ui.theme.Gold
 import com.humblecoders.humbledrive.ui.theme.TextMuted
+import com.humblecoders.humbledrive.ui.theme.TextPrimary
 
 /**
  * Code entry.
@@ -50,6 +55,25 @@ fun CodeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        // A quiet brand mark rather than a logo file: the asset has not been
+        // handed over, and a placeholder image would look worse than type.
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(Brand),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "HD",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
         Text(
             text = stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineSmall,
@@ -62,7 +86,7 @@ fun CodeScreen(
             color = TextMuted,
         )
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(36.dp))
 
         Text(
             text = stringResource(R.string.code_title),
@@ -100,17 +124,25 @@ fun CodeScreen(
                 keyboard?.hide()
                 onSubmit()
             }),
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
 
         if (state.error != null) {
             Spacer(Modifier.height(12.dp))
-            Text(
-                text = stringResource(state.error.messageRes()),
-                color = Gold,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-            )
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = stringResource(state.error.messageRes()),
+                    color = Gold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(14.dp),
+                )
+            }
         }
 
         Spacer(Modifier.height(24.dp))

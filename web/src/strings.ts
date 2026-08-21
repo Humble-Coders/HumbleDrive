@@ -28,6 +28,18 @@ export const strings = {
   },
 
   login: {
+    // The left panel exists to say what this is to someone who has never seen
+    // it — a supervisor opening a link, or a panel watching a demo.
+    pitch: "Plan the journey. Watch it happen.",
+    pitchBody:
+      "One place to plan a run, brief the driver, and see how the day actually went.",
+    point1: "Compare real routes before you commit",
+    point1Body: "Live driving times, so a plan reflects the road rather than a guess.",
+    point2: "Brief the driver in one message",
+    point2Body: "A single-use code opens the whole run on their phone. No accounts, no passwords.",
+    point3: "Rest stops are part of the plan",
+    point3Body: "Breaks carry a planned duration, so the day adds up honestly.",
+
     title: "Sign in",
     subtitle: "Supervisor access only.",
     email: "Email",

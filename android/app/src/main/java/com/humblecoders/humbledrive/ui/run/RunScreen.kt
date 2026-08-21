@@ -2,16 +2,20 @@ package com.humblecoders.humbledrive.ui.run
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -87,11 +91,20 @@ fun RunScreen(
                     Spacer(Modifier.height(12.dp))
                 }
 
-                Text(run.origin.name, style = MaterialTheme.typography.bodySmall, color = TextMuted)
+                Text(
+                    "${stringResource(R.string.run_from)} ${run.origin.name}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(2.dp))
                 Text(
                     run.destination.name,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -194,24 +207,44 @@ private fun RouteMap(run: Run, modifier: Modifier = Modifier) {
 
 @Composable
 private fun TimingRow(run: Run) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        // Drive, break and total all shown. A six-hour drive with 45 minutes of
-        // breaks is a longer day than the drive time alone suggests.
-        Stat(stringResource(R.string.run_drive_time), formatDuration(run.driveSeconds))
-        Stat(stringResource(R.string.run_break_time), formatDuration(run.breakSeconds))
-        Stat(stringResource(R.string.run_total_time), formatDuration(run.totalSeconds), Gold)
-        Stat(stringResource(R.string.run_distance), formatDistance(run.distanceMetres))
+    // Drive, break and total all shown. A six-hour drive with 45 minutes of
+    // breaks is a longer day than the drive time alone suggests, and the driver
+    // should see that before setting off.
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Stat(stringResource(R.string.run_drive_time), formatDuration(run.driveSeconds), Modifier.weight(1f))
+            Stat(stringResource(R.string.run_break_time), formatDuration(run.breakSeconds), Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Stat(
+                stringResource(R.string.run_total_time),
+                formatDuration(run.totalSeconds),
+                Modifier.weight(1f),
+                valueColor = Gold,
+            )
+            Stat(stringResource(R.string.run_distance), formatDistance(run.distanceMetres), Modifier.weight(1f))
+        }
     }
 }
 
 @Composable
-private fun Stat(label: String, value: String, valueColor: androidx.compose.ui.graphics.Color = TextPrimary) {
-    Column {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
-        Text(value, style = MaterialTheme.typography.titleSmall, color = valueColor)
+private fun Stat(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueColor: androidx.compose.ui.graphics.Color = TextPrimary,
+) {
+    Surface(color = Card, shape = MaterialTheme.shapes.medium, modifier = modifier) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+            Spacer(Modifier.height(2.dp))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = valueColor,
+            )
+        }
     }
 }
 
@@ -229,15 +262,51 @@ private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Un
 @Composable
 private fun StopRow(stop: BreakStop) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("${stop.seq}. ${stop.name}", style = MaterialTheme.typography.bodyMedium)
-        Text(
-            "${stringResource(stop.type.labelRes())} · ${stop.plannedMinutes} min",
-            style = MaterialTheme.typography.bodySmall,
-            color = TextMuted,
-        )
+        // The sequence number carries the order, so the eye can follow the
+        // journey down the list without reading every name.
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(Secondary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                stop.seq.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                color = TextMuted,
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(Modifier.weight(1f)) {
+            Text(
+                stop.name,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                stringResource(stop.type.labelRes()),
+                style = MaterialTheme.typography.bodySmall,
+                color = TextMuted,
+            )
+        }
+
+        // Planned duration as a chip: it is the number the driver is looking
+        // for, and a chip separates it from the name at a glance.
+        Surface(color = Secondary, shape = MaterialTheme.shapes.small) {
+            Text(
+                "${stop.plannedMinutes} min",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextPrimary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            )
+        }
     }
 }
 
