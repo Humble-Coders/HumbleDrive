@@ -283,3 +283,98 @@ export function Dialog({
     </dialog>
   );
 }
+
+
+/* ----------------------------------------------------------- StepIndicator */
+
+/**
+ * Wizard progress.
+ *
+ * Numbered because the steps genuinely are a sequence — you cannot add stops
+ * before choosing a route, and the Routes API is the reason (alternatives and
+ * waypoints are mutually exclusive). The numbers encode a real dependency
+ * rather than decorating the page.
+ */
+export function StepIndicator({
+  steps,
+  current,
+  onGoTo,
+}: {
+  steps: readonly string[];
+  /** 1-based. */
+  current: number;
+  /** Only called for steps already completed — you cannot skip forward. */
+  onGoTo?: (step: number) => void;
+}) {
+  return (
+    <ol className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-3">
+      {steps.map((label, i) => {
+        const step = i + 1;
+        const done = step < current;
+        const active = step === current;
+        const clickable = done && onGoTo;
+
+        const dot = (
+          <span
+            className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs font-semibold transition-colors ${
+              active
+                ? "border-brand-2 bg-brand text-text"
+                : done
+                  ? "border-brand-2 bg-secondary text-brand-2"
+                  : "border-edge bg-secondary text-muted-text"
+            }`}
+          >
+            {done ? "✓" : step}
+          </span>
+        );
+
+        return (
+          <li key={label} className="flex items-center gap-2">
+            {clickable ? (
+              <button
+                type="button"
+                onClick={() => onGoTo(step)}
+                className="flex items-center gap-2 rounded-[var(--radius-token)] px-1 py-0.5 text-sm text-muted-text hover:text-text"
+              >
+                {dot}
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ) : (
+              <span
+                className={`flex items-center gap-2 px-1 py-0.5 text-sm ${
+                  active ? "font-medium text-text" : "text-muted-text"
+                }`}
+                aria-current={active ? "step" : undefined}
+              >
+                {dot}
+                <span className="hidden sm:inline">{label}</span>
+              </span>
+            )}
+            {step < steps.length && (
+              <span
+                aria-hidden="true"
+                className={`h-px w-5 sm:w-8 ${done ? "bg-brand-2" : "bg-edge"}`}
+              />
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/* ------------------------------------------------------------------- Badge */
+
+export function Badge({ children, tone = "default" }: { children: ReactNode; tone?: "default" | "accent" }) {
+  return (
+    <span
+      className={`inline-block shrink-0 rounded-full border px-2 py-0.5 text-[0.7rem] font-medium ${
+        tone === "accent"
+          ? "border-gold/40 bg-gold/10 text-gold"
+          : "border-edge bg-secondary text-muted-text"
+      }`}
+    >
+      {children}
+    </span>
+  );
+}

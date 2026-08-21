@@ -5,7 +5,20 @@ import { strings } from "../strings";
 import { duration, distance } from "../lib/format";
 import { PlaceSearch, type Place } from "../components/PlaceSearch";
 import { RouteMap, type MapMarker } from "../components/RouteMap";
-import { Banner, Button, Card, EmptyState, Field, LoadingState, PageHeader } from "../components/ui";
+import {
+  Badge,
+  Banner,
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  LoadingState,
+  PageHeader,
+
+  StepIndicator,
+} from "../components/ui";
+import { RouteGraphic } from "../components/RouteGraphic";
+import { IconPin, IconRoute } from "../components/icons";
 
 /**
  * The planning wizard.
@@ -283,11 +296,17 @@ export function Plan() {
 
   return (
     <>
-      <PageHeader
-        title={strings.plan.title}
-        description={`${strings.plan.stepOf} ${s.step} — ${
-          [strings.plan.step1, strings.plan.step2, strings.plan.step3, strings.plan.step4][s.step - 1]
-        }`}
+      <PageHeader title={strings.plan.title} />
+
+      <StepIndicator
+        steps={[
+          strings.plan.stepShort1,
+          strings.plan.stepShort2,
+          strings.plan.stepShort3,
+          strings.plan.stepShort4,
+        ]}
+        current={s.step}
+        onGoTo={(step) => patch({ step })}
       />
 
       {error && (
@@ -307,15 +326,31 @@ export function Plan() {
       )}
 
       {s.step === 1 && (
-        <Card className="flex max-w-xl flex-col gap-5">
-          <PlaceSearch label={strings.plan.origin} value={s.origin} onSelect={(p) => patch({ origin: p, routes: [] })} />
-          <PlaceSearch label={strings.plan.destination} value={s.destination} onSelect={(p) => patch({ destination: p, routes: [] })} />
-          <div className="flex justify-end">
-            <Button disabled={!s.origin || !s.destination} onClick={() => void goToStep2()}>
-              {strings.plan.next}
-            </Button>
-          </div>
-        </Card>
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,26rem)_1fr]">
+          <Card className="flex flex-col gap-5">
+            <div className="flex items-center gap-2 text-muted-text">
+              <IconRoute />
+              <span className="text-xs font-medium tracking-wide uppercase">{strings.plan.step1}</span>
+            </div>
+            <PlaceSearch label={strings.plan.origin} value={s.origin} onSelect={(p) => patch({ origin: p, routes: [] })} />
+            <PlaceSearch label={strings.plan.destination} value={s.destination} onSelect={(p) => patch({ destination: p, routes: [] })} />
+            <div className="flex justify-end">
+              <Button disabled={!s.origin || !s.destination} onClick={() => void goToStep2()}>
+                {strings.plan.next}
+              </Button>
+            </div>
+          </Card>
+
+          {/* Before there is a route there is nothing truthful to draw, so the
+              illustration stands in rather than an empty grey map. */}
+          <Card className="hidden flex-col items-center gap-4 py-10 lg:flex">
+            <RouteGraphic className="w-full max-w-md" />
+            <div className="max-w-sm text-center">
+              <p className="font-medium">{strings.plan.emptyRouteTitle}</p>
+              <p className="mt-1 text-sm text-muted-text">{strings.plan.emptyRouteBody}</p>
+            </div>
+          </Card>
+        </div>
       )}
 
       {(s.step === 2 || s.step === 3) && (
@@ -336,25 +371,39 @@ export function Plan() {
                   <p className="text-sm text-muted-text">{strings.plan.routesHint}</p>
                 </div>
                 <ul className="flex flex-col gap-2">
-                  {s.routes.map((r, i) => (
-                    <li key={r.id}>
-                      <button
-                        type="button"
-                        aria-pressed={i === s.selected}
-                        onClick={() => patch({ selected: i })}
-                        className={`w-full rounded-[var(--radius-token)] border px-3 py-2 text-left text-sm ${
-                          i === s.selected ? "border-brand-2 bg-secondary" : "border-edge hover:bg-secondary"
-                        }`}
-                      >
-                        <span className="block font-medium">
-                          {duration(r.duration_s)} · {distance(r.distance_m)}
-                        </span>
-                        <span className="block truncate text-xs text-muted-text">
-                          {r.summary || "—"}{i === s.selected ? ` · ${strings.plan.selected}` : ""}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                  {s.routes.map((r, i) => {
+                    const fastest =
+                      s.routes.length > 1 &&
+                      r.duration_s === Math.min(...s.routes.map((x) => x.duration_s));
+                    return (
+                      <li key={r.id}>
+                        <button
+                          type="button"
+                          aria-pressed={i === s.selected}
+                          onClick={() => patch({ selected: i })}
+                          className={`w-full rounded-[var(--radius-token)] border px-3 py-3 text-left transition-colors ${
+                            i === s.selected
+                              ? "border-brand-2 bg-secondary"
+                              : "border-edge hover:bg-secondary"
+                          }`}
+                        >
+                          <span className="flex items-baseline justify-between gap-2">
+                            <span className="text-lg font-semibold tabular-nums">
+                              {duration(r.duration_s)}
+                            </span>
+                            {fastest && <Badge tone="accent">{strings.plan.fastest}</Badge>}
+                          </span>
+                          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-text">
+                            <IconPin className="h-3 w-3" />
+                            <span className="truncate">
+                              {distance(r.distance_m)}
+                              {r.summary ? ` · ${r.summary}` : ""}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
                 <div className="flex justify-between">
                   <Button variant="secondary" onClick={() => patch({ step: 1 })}>{strings.plan.back}</Button>
@@ -378,10 +427,15 @@ export function Plan() {
                 ) : (
                   <ol className="flex flex-col gap-2">
                     {s.stops.map((st, i) => (
-                      <li key={`${st.place_id}-${i}`} className="rounded-[var(--radius-token)] border border-edge p-3">
+                      <li key={`${st.place_id}-${i}`} className="rounded-[var(--radius-token)] border border-edge bg-secondary/40 p-3">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="min-w-0 truncate text-sm font-medium" title={st.name}>
-                            {i + 1}. {st.name}
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-secondary text-xs text-muted-text">
+                              {i + 1}
+                            </span>
+                            <span className="min-w-0 truncate text-sm font-medium" title={st.name}>
+                              {st.name}
+                            </span>
                           </span>
                           <div className="flex shrink-0 gap-1">
                             <Button variant="ghost" aria-label={`${strings.plan.moveUp}: ${st.name}`} onClick={() => moveStop(i, i - 1)}>↑</Button>
@@ -497,11 +551,23 @@ export function Plan() {
 /** Drive + break + total, all three visible. A six-hour drive with 90 minutes
  *  of breaks is a seven-and-a-half-hour day, and the supervisor should see it. */
 function Timing({ driveSeconds, breakSeconds, totalSeconds }: { driveSeconds: number; breakSeconds: number; totalSeconds: number }) {
+  // Drive, break and total all shown. The total is the number a supervisor
+  // commits to, so it carries the accent; the two parts explain how it got
+  // there.
   return (
-    <dl className="grid grid-cols-3 gap-2 rounded-[var(--radius-token)] border border-edge bg-secondary p-3 text-center text-sm">
-      <div><dt className="text-xs text-muted-text">{strings.plan.driveTime}</dt><dd className="font-medium">{duration(driveSeconds)}</dd></div>
-      <div><dt className="text-xs text-muted-text">{strings.plan.breakTime}</dt><dd className="font-medium">{duration(breakSeconds)}</dd></div>
-      <div><dt className="text-xs text-muted-text">{strings.plan.totalTime}</dt><dd className="font-medium text-gold">{duration(totalSeconds)}</dd></div>
+    <dl className="grid grid-cols-3 divide-x divide-edge overflow-hidden rounded-[var(--radius-token)] border border-edge bg-secondary text-center">
+      {[
+        [strings.plan.driveTime, duration(driveSeconds), false],
+        [strings.plan.breakTime, duration(breakSeconds), false],
+        [strings.plan.totalShort, duration(totalSeconds), true],
+      ].map(([label, value, accent]) => (
+        <div key={label as string} className="px-2 py-3">
+          <dt className="text-[0.7rem] tracking-wide whitespace-nowrap text-muted-text uppercase">{label}</dt>
+          <dd className={`mt-0.5 font-semibold whitespace-nowrap tabular-nums ${accent ? "text-gold" : "text-text"}`}>
+            {value}
+          </dd>
+        </div>
+      ))}
     </dl>
   );
 }

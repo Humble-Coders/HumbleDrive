@@ -5,7 +5,17 @@ import { strings } from "../strings";
 import { duration, distance, dateTime } from "../lib/format";
 import { RouteMap, type MapMarker } from "../components/RouteMap";
 import { StatusPill } from "../components/StatusPill";
-import { Banner, Button, Card, Dialog, EmptyState, Field, LoadingState, PageHeader } from "../components/ui";
+import {
+  Banner,
+  Button,
+  Card,
+  Dialog,
+  EmptyState,
+  Field,
+  LoadingState,
+  PageHeader,
+} from "../components/ui";
+import { IconMail, IconPin, IconTruck } from "../components/icons";
 
 /**
  * One run, in full.
@@ -187,29 +197,66 @@ export function TripDetail() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card className="flex flex-col gap-2 text-sm">
-            <Row label={strings.plan.driveTime} value={duration(route?.drive_duration_s ?? 0)} />
-            <Row label={strings.plan.breakTime} value={duration(breakSeconds)} />
-            <Row label={strings.plan.totalTime} value={duration(totalSeconds)} />
-            <Row label="Distance" value={distance(route?.distance_m ?? 0)} />
-            <Row label={strings.trips.code} value={trip.code_sent_at ? `${strings.trips.codeSent} · ${dateTime(trip.code_sent_at)}` : strings.trips.codeNotSent} />
+          <Card className="flex flex-col gap-3">
+            <dl className="grid grid-cols-3 divide-x divide-edge overflow-hidden rounded-[var(--radius-token)] border border-edge bg-secondary text-center">
+              {[
+                [strings.plan.driveTime, duration(route?.drive_duration_s ?? 0), false],
+                [strings.plan.breakTime, duration(breakSeconds), false],
+                [strings.plan.totalShort, duration(totalSeconds), true],
+              ].map(([label, value, accent]) => (
+                <div key={label as string} className="px-2 py-3">
+                  <dt className="text-[0.7rem] tracking-wide whitespace-nowrap text-muted-text uppercase">{label}</dt>
+                  <dd className={`mt-0.5 font-semibold whitespace-nowrap tabular-nums ${accent ? "text-gold" : "text-text"}`}>
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <div className="flex flex-col gap-2 text-sm">
+              <Row label="Distance" value={distance(route?.distance_m ?? 0)} />
+              <div className="flex items-center justify-between gap-3">
+                <dt className="flex shrink-0 items-center gap-1.5 text-muted-text">
+                  <IconMail className="h-3.5 w-3.5" />
+                  {strings.trips.code}
+                </dt>
+                <dd className="min-w-0 truncate text-right">
+                  {trip.code_sent_at
+                    ? `${strings.trips.codeSent} · ${dateTime(trip.code_sent_at)}`
+                    : strings.trips.codeNotSent}
+                </dd>
+              </div>
+            </div>
           </Card>
 
           <Card>
-            <h2 className="mb-2 font-medium">{strings.plan.stopsTitle}</h2>
-            {stops.length === 0 ? (
-              <p className="text-sm text-muted-text">{strings.plan.noStops}</p>
-            ) : (
-              <ol className="flex flex-col gap-2 text-sm">
-                {stops.map((st) => (
-                  <li key={st.id} className="flex justify-between gap-3">
-                    <span className="min-w-0 truncate" title={st.name}>{st.seq}. {st.name}</span>
-                    <span className="shrink-0 text-muted-text">
-                      {STOP_LABELS[st.stop_type] ?? st.stop_type} · {st.planned_minutes} min
-                    </span>
-                  </li>
-                ))}
-              </ol>
+            <h2 className="mb-4 font-medium">{strings.plan.stopsTitle}</h2>
+            {/* A timeline rather than a list: the run has a shape, and origin
+                to destination is the thing a supervisor is checking. */}
+            <ol className="flex flex-col">
+              <TimelineNode
+                icon={<IconTruck className="h-3.5 w-3.5" />}
+                title={route?.origin_name ?? "—"}
+                meta={strings.plan.origin}
+                first
+              />
+              {stops.map((st) => (
+                <TimelineNode
+                  key={st.id}
+                  marker={st.seq}
+                  title={st.name}
+                  meta={`${STOP_LABELS[st.stop_type] ?? st.stop_type} · ${st.planned_minutes} min`}
+                />
+              ))}
+              <TimelineNode
+                icon={<IconPin className="h-3.5 w-3.5" />}
+                title={route?.dest_name ?? "—"}
+                meta={strings.plan.destination}
+                last
+                accent
+              />
+            </ol>
+            {stops.length === 0 && (
+              <p className="mt-3 text-sm text-muted-text">{strings.plan.noStops}</p>
             )}
           </Card>
 
@@ -264,6 +311,49 @@ export function TripDetail() {
         </div>
       </Dialog>
     </>
+  );
+}
+
+function TimelineNode({
+  marker,
+  icon,
+  title,
+  meta,
+  first = false,
+  last = false,
+  accent = false,
+}: {
+  marker?: number;
+  icon?: React.ReactNode;
+  title: string;
+  meta: string;
+  first?: boolean;
+  last?: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <li className="flex gap-3">
+      {/* The rail: a dot with a connector above and below, drawn only where
+          there is a neighbour, so the ends terminate cleanly. */}
+      <div className="flex w-6 shrink-0 flex-col items-center">
+        <span className={`w-px flex-1 ${first ? "bg-transparent" : "bg-edge"}`} />
+        <span
+          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[0.7rem] ${
+            accent
+              ? "border-gold/50 bg-gold/10 text-gold"
+              : "border-edge bg-secondary text-muted-text"
+          }`}
+        >
+          {icon ?? marker}
+        </span>
+        <span className={`w-px flex-1 ${last ? "bg-transparent" : "bg-edge"}`} />
+      </div>
+
+      <div className="min-w-0 py-2">
+        <p className="truncate text-sm font-medium" title={title}>{title}</p>
+        <p className="truncate text-xs text-muted-text">{meta}</p>
+      </div>
+    </li>
   );
 }
 

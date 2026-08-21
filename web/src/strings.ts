@@ -153,6 +153,13 @@ export const strings = {
     step2: "Choose a route",
     step3: "Add break stops",
     step4: "Consignment and driver",
+    stepShort1: "Route",
+    stepShort2: "Options",
+    stepShort3: "Breaks",
+    stepShort4: "Assign",
+    fastest: "Fastest",
+    emptyRouteTitle: "Pick where the run starts and ends",
+    emptyRouteBody: "Search for both places and we'll fetch driving routes between them.",
     stepOf: "Step",
     next: "Next",
     back: "Back",
@@ -191,6 +198,8 @@ export const strings = {
     driveTime: "Drive time",
     breakTime: "Break time",
     totalTime: "Total run time",
+    // Short form for the compact three-across tiles, where the full label wraps.
+    totalShort: "Total",
 
     consignmentTitle: "Consignment",
     ref: "Reference",

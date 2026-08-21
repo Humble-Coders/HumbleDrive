@@ -27,12 +27,21 @@ const KEY = import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
 
 /** Dark style, so the map doesn't glare against #07090f. */
 const DARK_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#0f131c" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#07090f" }] },
+  // Dark enough not to glare beside the app, light enough to still read as a
+  // map: roads and place labels stay visible, because a route drawn over a
+  // featureless void tells a supervisor nothing about where it goes.
+  { elementType: "geometry", stylers: [{ color: "#131826" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#94a0b8" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2030" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#07090f" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#07090f" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2a3448" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#0f131c" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#242c3d" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#33405a" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#aab6cc" }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1320" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
 
 let loader: Promise<void> | null = null;
