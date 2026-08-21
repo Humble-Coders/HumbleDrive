@@ -76,6 +76,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
 
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.core.splashscreen)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)

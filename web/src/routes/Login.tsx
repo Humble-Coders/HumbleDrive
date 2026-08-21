@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { strings } from "../strings";
 import { Button, Field, Card, Banner } from "../components/ui";
 import { IconCheck } from "../components/icons";
+import { RouteGraphic } from "../components/RouteGraphic";
 import { messageFor } from "../lib/api";
 import { Wordmark } from "../components/Wordmark";
 
@@ -66,7 +67,7 @@ export function Login({ notSupervisor = false }: { notSupervisor?: boolean }) {
 
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
-      <section className="relative hidden flex-col justify-between overflow-hidden border-r border-edge bg-card p-12 lg:flex">
+      <section className="relative hidden flex-col justify-center gap-12 overflow-hidden border-r border-edge bg-card p-12 lg:flex">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -76,9 +77,7 @@ export function Login({ notSupervisor = false }: { notSupervisor?: boolean }) {
           }}
         />
 
-        <div className="relative">
-          <Wordmark className="text-3xl" />
-        </div>
+        <RouteGraphic className="relative w-full max-w-lg self-center" />
 
         <div className="relative flex flex-col gap-8">
           <div className="flex flex-col gap-3">
@@ -103,13 +102,14 @@ export function Login({ notSupervisor = false }: { notSupervisor?: boolean }) {
           </ul>
         </div>
 
-        <p className="relative text-xs text-muted-text">{strings.app.tagline}</p>
       </section>
 
       <section className="flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <div className="mb-8 flex flex-col items-center gap-2 lg:hidden">
-            <Wordmark />
+          {/* The mark sits with the form, not adrift in a corner — it is the
+              first thing read on the half of the screen being used. */}
+          <div className="mb-7 flex flex-col items-center gap-1.5 text-center">
+            <Wordmark className="text-4xl" />
             <p className="text-sm text-muted-text">{strings.app.tagline}</p>
           </div>
 

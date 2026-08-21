@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark only, per PRD D-21. Compose owns the real theme; this exists so
-         the window background matches before the first frame and there is no
-         white flash on launch. -->
+    <!--
+      Dark only, per PRD D-21.
+
+      The launch theme is the system splash: it shows the brand mark on the app
+      background from the instant the icon is tapped, which removes the blank
+      frame the app used to show while it read the encrypted session store.
+      MainActivity swaps to the main theme once Compose takes over.
+    -->
+    <style name="Theme.HumbleDrive.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#07090F</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.HumbleDrive</item>
+    </style>
+
     <style name="Theme.HumbleDrive" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">#07090f</item>
         <item name="android:statusBarColor">@android:color/transparent</item>

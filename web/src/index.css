@@ -39,6 +39,11 @@
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Caveat", ui-serif, cursive;
+  /* The wordmark face. CLAUDE.md names Caveat as the logo script; a tight
+   * grotesque reads as a product mark rather than a signature, which suits a
+   * dispatch tool better. Caveat stays defined for anywhere the script is
+   * still wanted. */
+  --font-wordmark: "Archivo", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -77,7 +82,20 @@ body::before {
 
 #root { position: relative; z-index: 1; }
 
+/* The travelling dashes on the sign-in illustration. The only motion in the
+ * app, and it stops completely under reduced-motion. */
+.route-dashes {
+  stroke-dashoffset: 0;
+  animation: route-travel 3.5s linear infinite;
+}
+
+@keyframes route-travel {
+  to { stroke-dashoffset: -48; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .route-dashes { animation: none; }
+
   *,
   *::before,
   *::after {

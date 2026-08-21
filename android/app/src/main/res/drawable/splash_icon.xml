@@ -1,0 +1,37 @@
+<!--
+  The splash mark: a route climbing from an origin to a destination, with two
+  break stops on the way. The same idea as the web sign-in illustration, so the
+  two products open with one visual identity.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Route -->
+    <path
+        android:pathData="M 24 92 C 40 70, 50 78, 62 60 S 84 32, 98 30"
+        android:strokeColor="#5B7CC4"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+
+    <!-- Break stops -->
+    <path
+        android:pathData="M 62 60 m -6 0 a 6 6 0 1 0 12 0 a 6 6 0 1 0 -12 0"
+        android:fillColor="#07090F"
+        android:strokeColor="#5B7CC4"
+        android:strokeWidth="3" />
+
+    <!-- Origin -->
+    <path
+        android:pathData="M 24 92 m -7 0 a 7 7 0 1 0 14 0 a 7 7 0 1 0 -14 0"
+        android:fillColor="#07090F"
+        android:strokeColor="#5B7CC4"
+        android:strokeWidth="4" />
+
+    <!-- Destination -->
+    <path
+        android:pathData="M 98 30 m -8 0 a 8 8 0 1 0 16 0 a 8 8 0 1 0 -16 0"
+        android:fillColor="#F5C451" />
+</vector>

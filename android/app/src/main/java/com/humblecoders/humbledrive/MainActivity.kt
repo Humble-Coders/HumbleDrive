@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,6 +21,12 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must be called before super.onCreate. The system splash then covers
+        // the gap between tapping the icon and Compose drawing its first frame,
+        // which is where the app previously showed a blank screen while it read
+        // the encrypted session store.
+        val splash = installSplashScreen()
+
         // Edge to edge: the background draws under the system bars, and
         // safeDrawingPadding keeps content and controls clear of them.
         enableEdgeToEdge()
@@ -27,13 +34,18 @@ class MainActivity : ComponentActivity() {
 
         val repository = (application as HumbleDriveApp).container.runRepository
 
+        // Hold the splash until we know which screen to show, so the driver
+        // never sees code entry flash up before their cached run appears.
+        var sessionResolved = false
+        splash.setKeepOnScreenCondition { !sessionResolved }
+
         setContent {
             HumbleDriveTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    AppRoot(repository)
+                    AppRoot(repository, onResolved = { sessionResolved = true })
                 }
             }
         }
@@ -46,17 +58,18 @@ class MainActivity : ComponentActivity() {
  * the code screen again for that run.
  */
 @Composable
-private fun AppRoot(repository: RunRepository) {
+private fun AppRoot(repository: RunRepository, onResolved: () -> Unit) {
     var hasSession by remember { mutableStateOf<Boolean?>(null) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         hasSession = repository.hasSession()
+        onResolved()
     }
 
     when (hasSession) {
-        // Still reading the encrypted store — a blank frame is correct here and
-        // lasts milliseconds.
+        // The system splash is still covering this, held by
+        // setKeepOnScreenCondition until the store has been read.
         null -> Unit
 
         false -> {
