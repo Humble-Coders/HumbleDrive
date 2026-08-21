@@ -225,6 +225,8 @@ Fixed and closed. Every code below must be handled by both clients with friendly
 
 **Supervisor-facing:** `unauthorized` · `not_admin` · `driver_inactive` · `driver_busy` · `not_found` · `invalid_transition` · `places_failed` · `routes_failed` · `email_failed` · `bad_request`
 
+**Platform-wide:** `internal_error` — an unhandled failure on our side, returned as 500. Every other code blames the caller or a named third party, so an unexpected exception had nowhere to go (added by ticket 2). It is never raised deliberately: it means a bug or an outage, and the underlying error is logged server-side and never returned.
+
 `unauthorized` is checked before anything else on every endpoint, so an unauthenticated request does no work and leaks nothing.
 
 ---
