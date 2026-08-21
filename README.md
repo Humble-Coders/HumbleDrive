@@ -170,16 +170,28 @@ neither the network nor a Supabase project. Also available: `deno task check`
 ### Deploying
 
 ```bash
+supabase login                                   # once per machine
 supabase link --project-ref <your-project-ref>   # once per machine
 supabase functions deploy admin-me
 ```
 
 There is no staging. A deploy is live — deploy deliberately.
 
+**Every function needs a `verify_jwt = false` entry in `supabase/config.toml`.**
+The platform's own JWT gate would otherwise answer before our code does, in its
+own body shape — breaking the error contract, and breaking CORS preflight
+outright, since an `OPTIONS` request carries no `Authorization` header. Nothing
+is weakened by this: `requireAdmin` verifies the JWT *and* requires an active
+`admins` row, which is strictly more than the platform gate did.
+
 ### Secrets
 
-`SUPABASE_URL` and the key variables are injected into functions automatically.
-Anything else is set by hand and is never committed:
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are
+injected into functions automatically. Note the legacy names: the project uses
+the current publishable / secret naming (D-39), but the Edge runtime does not
+inject those yet, so `_shared/supabase.ts` reads the current name first and
+falls back to the legacy one. Anything else is set by hand, and is never
+committed:
 
 ```bash
 supabase secrets set ALLOWED_ORIGINS="http://localhost:5173"

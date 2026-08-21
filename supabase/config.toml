@@ -1,0 +1,16 @@
+# Minimal CLI config. The dashboard stays the source of truth for project
+# settings; this file exists for the one thing that must not drift.
+#
+# Deliberately no project_id: the ref comes from `supabase link`, and keeping it
+# out means no project identifier is committed anywhere in the repo.
+
+[functions.admin-me]
+# The platform's own JWT gate is off so that OUR gate answers.
+#
+# Left on, the platform rejects a token-less request itself, with its own body
+# shape — which breaks the error contract in PRD §4.7, and breaks CORS
+# preflight outright, since an OPTIONS request carries no Authorization header.
+#
+# This does not weaken anything: requireAdmin verifies the JWT and then checks
+# for an active `admins` row, which is strictly more than the platform gate did.
+verify_jwt = false

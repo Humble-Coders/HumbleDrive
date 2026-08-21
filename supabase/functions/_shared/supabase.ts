@@ -16,11 +16,18 @@ import type { AdminRecord, AuthDeps } from "./auth.ts";
 /**
  * Read the first of `names` that is set.
  *
- * Two names per key because of D-39: the project uses the current publishable /
- * secret naming, while the Edge runtime has historically injected the legacy
- * anon / service_role variables. Preferring the current name and falling back
- * keeps us correct either way, and the fallback drops out once the runtime is
- * confirmed to inject the new names.
+ * Two names per key because of D-39. The project uses the current publishable /
+ * secret naming, but the Edge runtime does not yet inject it. Measured against
+ * this project on 2026-08-21, the runtime provides exactly:
+ *
+ *     SUPABASE_URL                 yes
+ *     SUPABASE_ANON_KEY            yes      SUPABASE_PUBLISHABLE_KEY   no
+ *     SUPABASE_SERVICE_ROLE_KEY    yes      SUPABASE_SECRET_KEY        no
+ *
+ * So today the second name is the one that resolves — the fallback is the live
+ * path, not a safety net. The current name is tried first so that nothing has
+ * to change here when the runtime catches up. Our own naming still follows
+ * D-39; this is only about what the platform hands us.
  */
 function requireEnv(...names: string[]): string {
   for (const name of names) {
