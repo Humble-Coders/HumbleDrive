@@ -16,6 +16,7 @@ export const strings = {
   },
 
   nav: {
+    overview: "Overview",
     drivers: "Drivers",
     plan: "Plan a run",
     trips: "Trips",
@@ -74,6 +75,27 @@ export const strings = {
     save: "Save",
     saving: "Saving…",
     close: "Close",
+  },
+
+  dashboard: {
+    title: "Fleet overview",
+    description: "Everything happening right now, and what came before it.",
+    onTheRoad: "On the road",
+    awaitingStart: "Awaiting start",
+    activeDrivers: "Active drivers",
+    completedRuns: "Completed",
+    movingNow: "Being driven now",
+    noneMoving: "Nothing moving",
+    codeSentHint: "Code sent, not started",
+    deliveredHint: "All time",
+    recent: "Recent runs",
+    viewAll: "View all",
+    quickPlan: "Plan a run",
+    quickDrivers: "Manage drivers",
+    nothingLive: "No runs in progress",
+    nothingLiveBody: "When a driver starts a run it appears here.",
+    firstRun: "Plan your first run",
+    firstRunBody: "Pick a route, add the driver's break stops, and send them a code.",
   },
 
   drivers: {

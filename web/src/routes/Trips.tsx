@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { callFunction, messageFor } from "../lib/api";
 import { strings } from "../strings";
-import { duration, dateTime } from "../lib/format";
+import { duration, dateTime, plural } from "../lib/format";
 import { Banner, Button, Card, EmptyState, LoadingState, PageHeader } from "../components/ui";
 import { StatusPill, STATUS_LABELS } from "../components/StatusPill";
 
@@ -189,7 +189,7 @@ export function Trips() {
                       <StatusPill status={r.status} />
                     </div>
                     <p className="mt-2 truncate text-sm text-muted-text">
-                      {r.drivers?.name ?? "—"} · {duration(plannedTotal(r))} · {r.routes?.route_stops.length ?? 0} {strings.trips.stops.toLowerCase()}
+                      {r.drivers?.name ?? "—"} · {duration(plannedTotal(r))} · {plural(r.routes?.route_stops.length ?? 0, "stop")}
                     </p>
                   </Card>
                 </Link>

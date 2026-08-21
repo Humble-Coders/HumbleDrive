@@ -23,3 +23,8 @@ export function dateTime(iso: string | null): string {
     minute: "2-digit",
   });
 }
+
+/** "1 stop" / "2 stops". Trivial, and its absence is instantly noticeable. */
+export function plural(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`;
+}

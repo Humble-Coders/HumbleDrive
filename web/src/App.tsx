@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { AppShell } from "./routes/AppShell";
 import { Login } from "./routes/Login";
+import { Dashboard } from "./routes/Dashboard";
 import { Drivers } from "./routes/Drivers";
 import { Plan } from "./routes/Plan";
 import { Trips } from "./routes/Trips";
@@ -52,7 +53,7 @@ function LoginRoute() {
   }
 
   if (status.state === "signed-in") {
-    return <Navigate to={location.state?.from ?? "/trips"} replace />;
+    return <Navigate to={location.state?.from ?? "/"} replace />;
   }
 
   return <Login notSupervisor={status.notSupervisor} />;
@@ -65,7 +66,7 @@ export function App() {
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
           <Route element={<Protected />}>
-            <Route index element={<Navigate to="/trips" replace />} />
+            <Route index element={<Dashboard />} />
             <Route path="/drivers" element={<Drivers />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/trips" element={<Trips />} />

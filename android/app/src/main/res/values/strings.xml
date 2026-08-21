@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every user-facing string. No literal belongs in a composable (CLAUDE.md).
+  Written for a driver reading a phone in a cab: short, plain, and each error
+  says what to do next.
+-->
+<resources>
+    <string name="app_name">Humble Drive</string>
+    <string name="tagline">Consignment dispatch</string>
+
+    <string name="code_title">Enter your code</string>
+    <string name="code_subtitle">It\'s in the email from your supervisor.</string>
+    <string name="code_label">Code</string>
+    <string name="code_submit">Continue</string>
+    <string name="code_checking">Checking…</string>
+
+    <string name="error_invalid_code">That code isn\'t right. Check the email and try again.</string>
+    <string name="error_code_already_used">That code has already been used. If this wasn\'t you, ask your supervisor for a new one.</string>
+    <string name="error_trip_cancelled">This run was cancelled. Contact your supervisor.</string>
+    <string name="error_trip_completed">This run is already finished.</string>
+    <string name="error_session_expired">Your run has ended. Enter a new code when you get one.</string>
+    <string name="error_offline">No connection. Check your signal and try again.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+
+    <string name="run_title">Your run</string>
+    <string name="run_from">From</string>
+    <string name="run_to">To</string>
+    <string name="run_stops">Break stops</string>
+    <string name="run_no_stops">No breaks planned for this run.</string>
+    <string name="run_consignment">What you\'re carrying</string>
+    <string name="run_receiver">Receiver</string>
+    <string name="run_drive_time">Drive time</string>
+    <string name="run_break_time">Break time</string>
+    <string name="run_total_time">Total</string>
+    <string name="run_distance">Distance</string>
+    <string name="run_sign_out">Exit run</string>
+    <string name="run_refresh">Refresh</string>
+    <string name="run_cached">Showing saved details — you\'re offline.</string>
+    <string name="run_call">Call</string>
+
+    <string name="stop_break">Rest</string>
+    <string name="stop_food">Food</string>
+    <string name="stop_fuel">Fuel</string>
+    <string name="stop_other">Stop</string>
+
+    <string name="minutes_short">%1$d min</string>
+    <string name="loading">Loading…</string>
+</resources>

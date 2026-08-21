@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { strings } from "../strings";
 import { Button } from "../components/ui";
 import { Wordmark } from "../components/Wordmark";
+import { IconExit, IconHome, IconRoute, IconTruck, IconUsers } from "../components/icons";
 
 /**
  * The authenticated frame every supervisor screen renders inside.
@@ -14,14 +15,15 @@ import { Wordmark } from "../components/Wordmark";
  */
 
 const NAV = [
-  { to: "/drivers", label: strings.nav.drivers },
-  { to: "/plan", label: strings.nav.plan },
-  { to: "/trips", label: strings.nav.trips },
+  { to: "/", label: strings.nav.overview, icon: IconHome, end: true },
+  { to: "/drivers", label: strings.nav.drivers, icon: IconUsers, end: false },
+  { to: "/plan", label: strings.nav.plan, icon: IconRoute, end: false },
+  { to: "/trips", label: strings.nav.trips, icon: IconTruck, end: false },
 ] as const;
 
 function navClass({ isActive }: { isActive: boolean }): string {
   const base =
-    "block rounded-[var(--radius-token)] px-3 py-2 text-sm transition-colors min-h-11 content-center";
+    "flex items-center gap-2.5 rounded-[var(--radius-token)] px-3 text-sm transition-colors min-h-11";
   return isActive
     ? `${base} bg-secondary text-text font-medium`
     : `${base} text-muted-text hover:bg-secondary hover:text-text`;
@@ -61,14 +63,20 @@ export function AppShell() {
         <nav
           id="primary-nav"
           aria-label={strings.app.name}
-          className={`${menuOpen ? "block" : "hidden"} border-b border-edge px-4 py-3 md:block md:w-56 md:shrink-0 md:border-b-0 md:border-r md:px-4 md:py-6`}
+          className={`${menuOpen ? "block" : "hidden"} border-b border-edge bg-card/40 px-4 py-3 md:block md:min-h-dvh md:w-60 md:shrink-0 md:border-b-0 md:border-r md:px-4 md:py-6`}
         >
           <Wordmark className="mb-6 hidden md:block" />
 
           <ul className="flex flex-col gap-1">
             {NAV.map((item) => (
               <li key={item.to}>
-                <NavLink to={item.to} className={navClass} onClick={() => setMenuOpen(false)}>
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  className={navClass}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <item.icon />
                   {item.label}
                 </NavLink>
               </li>
@@ -76,10 +84,18 @@ export function AppShell() {
           </ul>
 
           <div className="mt-6 border-t border-edge pt-4">
-            <p className="truncate px-3 pb-2 text-xs text-muted-text" title={supervisorName}>
-              {supervisorName}
-            </p>
-            <Button variant="ghost" className="w-full justify-start" onClick={() => void signOut()}>
+            <div className="flex items-center gap-2.5 px-3 pb-3">
+              {/* Initials rather than an avatar image: there is no photo to show,
+                  and an empty circle reads as a broken image. */}
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand text-xs font-semibold text-text">
+                {supervisorName.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+              </span>
+              <span className="min-w-0 truncate text-xs text-muted-text" title={supervisorName}>
+                {supervisorName}
+              </span>
+            </div>
+            <Button variant="ghost" className="w-full justify-start gap-2.5" onClick={() => void signOut()}>
+              <IconExit />
               {strings.nav.signOut}
             </Button>
           </div>

@@ -28,6 +28,15 @@
 
   --radius-token: 0.875rem;
 
+  /* Added for the visual pass. Still derived from the brand tokens rather than
+   * invented: elevated is card lifted one step, glow is the brand at low alpha
+   * for focus and selection, and hairline is the border at half strength for
+   * dividers inside a card. */
+  --color-elevated: #131826;
+  --color-glow: #5b7cc41f;
+  --color-hairline: #5b7cc414;
+  --color-positive: #6fb28a;
+
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Caveat", ui-serif, cursive;
 }
@@ -52,6 +61,21 @@ body {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* A single soft vignette behind everything, so the page has a centre of
+ * gravity instead of reading as a uniform slab of near-black. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, var(--color-glow), transparent 70%),
+    radial-gradient(50rem 35rem at 100% 0%, var(--color-hairline), transparent 65%);
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

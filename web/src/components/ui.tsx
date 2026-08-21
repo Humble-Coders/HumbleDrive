@@ -110,10 +110,62 @@ export function Field({ label, error, hint, id, className = "", ...rest }: Field
 
 /* -------------------------------------------------------------------- Card */
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = "",
+  elevated = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** Lifts the surface one step. For panels that sit on top of other panels. */
+  elevated?: boolean;
+}) {
   return (
-    <div className={`rounded-[var(--radius-token)] border border-edge bg-card p-5 ${className}`}>
+    <div
+      className={`rounded-[var(--radius-token)] border border-edge ${
+        elevated ? "bg-elevated shadow-lg shadow-black/20" : "bg-card"
+      } p-5 ${className}`}
+    >
       {children}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- StatTile */
+
+/**
+ * A single number, large, with its label above and optional context below.
+ *
+ * The dashboard is scanned rather than read, so the figure carries the weight
+ * and everything else recedes. Tabular numerals keep a row of tiles aligned.
+ */
+export function StatTile({
+  label,
+  value,
+  hint,
+  icon,
+  tone = "default",
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+  icon?: ReactNode;
+  tone?: "default" | "accent";
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-[var(--radius-token)] border border-edge bg-card p-4">
+      <div className="flex items-center gap-2 text-muted-text">
+        {icon}
+        <span className="text-xs font-medium tracking-wide uppercase">{label}</span>
+      </div>
+      <span
+        className={`text-3xl font-semibold tabular-nums ${
+          tone === "accent" ? "text-gold" : "text-text"
+        }`}
+      >
+        {value}
+      </span>
+      {hint && <span className="text-xs text-muted-text">{hint}</span>}
     </div>
   );
 }
@@ -124,11 +176,22 @@ export function PageHeader({ title, description, actions }: { title: string; des
   return (
     <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold text-text">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-text">{description}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight text-text">{title}</h1>
+        {description && <p className="mt-1 max-w-prose text-sm text-muted-text">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
+  );
+}
+
+/* ----------------------------------------------------------- SectionTitle */
+
+export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <h2 className="text-sm font-semibold tracking-wide text-muted-text uppercase">{children}</h2>
+      {action}
+    </div>
   );
 }
 
