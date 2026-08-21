@@ -63,7 +63,19 @@ export const ERROR_STATUS = {
   places_failed: 502,
   routes_failed: 502,
   email_failed: 502,
-} as const satisfies Record<SupervisorErrorCode | PlatformErrorCode, number>;
+
+  // Driver codes. Ticket 2 left these unmapped on purpose — assigning statuses
+  // to codes nothing emitted yet would have been guessing. The endpoints that
+  // raise them land here.
+  //
+  // invalid_code and session_expired are 401: the credential is wrong or gone.
+  // The rest are 409: we know exactly who you are, and the run has moved on.
+  invalid_code: 401,
+  session_expired: 401,
+  code_already_used: 409,
+  trip_cancelled: 409,
+  trip_completed: 409,
+} as const satisfies Record<SupervisorErrorCode | PlatformErrorCode | DriverErrorCode, number>;
 
 /** The codes this ticket can actually return. */
 export type MappedErrorCode = keyof typeof ERROR_STATUS;
@@ -81,6 +93,14 @@ export const DEFAULT_MESSAGE: Record<MappedErrorCode, string> = {
   places_failed: "We couldn't reach the address lookup just now. Please try again in a moment.",
   routes_failed: "We couldn't work out a route just now. Please try again in a moment.",
   email_failed: "The run was saved, but the code didn't send. Use Resend to try again.",
+
+  // Written for a driver reading a phone in a cab: short, plain, and each one
+  // says what to do next.
+  invalid_code: "That code isn't right. Check the email and try again.",
+  code_already_used: "That code has already been used. If this wasn't you, ask your supervisor for a new one.",
+  trip_cancelled: "This run was cancelled. Contact your supervisor.",
+  trip_completed: "This run is already finished.",
+  session_expired: "Your run has ended. Enter a new code when you get one.",
 };
 
 /** Every error body is exactly these two fields — no wrapper, no extras. */
