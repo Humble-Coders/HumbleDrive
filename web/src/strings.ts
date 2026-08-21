@@ -113,6 +113,134 @@ export const strings = {
     clearFilter: "Clear search",
   },
 
+  plan: {
+    title: "Plan a run",
+    step1: "Where to and from",
+    step2: "Choose a route",
+    step3: "Add break stops",
+    step4: "Consignment and driver",
+    stepOf: "Step",
+    next: "Next",
+    back: "Back",
+
+    origin: "Starting from",
+    destination: "Going to",
+    searchPlaceholder: "Search for a place in India",
+    noMatches: "No matches",
+    searching: "Searching…",
+
+    routesTitle: "Routes",
+    routesHint: "Pick the corridor you want. You'll add break stops next.",
+    selected: "Selected",
+    // Adding a stop means Google can no longer return alternatives, so the
+    // cards collapse. Said plainly, because a supervisor should never wonder
+    // where their options went.
+    refinedNotice:
+      "Stops refine the route you chose. Alternatives aren't available once a run has stops — remove them all to compare routes again.",
+    noRoutes: "No routes found between those places.",
+
+    stopsTitle: "Break stops",
+    stopsHint: "Rest, food and fuel stops for the driver. Nothing is dropped off here.",
+    addStop: "Add stop",
+    stopType: "Type",
+    stopMinutes: "Planned minutes",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    remove: "Remove",
+    noStops: "No stops yet. A run without breaks is fine.",
+    maxStops: "A run can have at most 10 stops.",
+    typeBreak: "Rest",
+    typeFood: "Food",
+    typeFuel: "Fuel",
+    typeOther: "Other",
+
+    driveTime: "Drive time",
+    breakTime: "Break time",
+    totalTime: "Total run time",
+
+    consignmentTitle: "Consignment",
+    ref: "Reference",
+    description: "Description",
+    weight: "Weight (kg)",
+    receiverName: "Receiver name",
+    receiverPhone: "Receiver phone",
+    driver: "Driver",
+    chooseDriver: "Choose a driver",
+    noFreeDrivers: "Every driver is either inactive or already on a run.",
+    summaryTitle: "Before you send",
+    send: "Assign and send code",
+    sending: "Creating the run…",
+    createdTitle: "Run created",
+    createdBody: "The code is on its way to the driver.",
+    createdNoEmail:
+      "The run was created, but the code didn't send. Open it from Trips and use Resend.",
+    planAnother: "Plan another run",
+    viewTrips: "Go to Trips",
+  },
+
+  map: {
+    // The browser key is a separate, render-only Google key. Until it exists
+    // the route is fully described in text beside where the map will be.
+    unavailable: "Map not available yet",
+    unavailableBody:
+      "The map needs a Google Maps browser key. Everything about the route is listed here in the meantime.",
+  },
+
+  trips: {
+    title: "Trips",
+    description: "Every run, live ones first.",
+    filterStatus: "Status",
+    all: "All",
+    pending: "Awaiting start",
+    active: "On the road",
+    completed: "Delivered",
+    cancelled: "Cancelled",
+    driver: "Driver",
+    route: "Route",
+    planned: "Planned",
+    stops: "Stops",
+    created: "Created",
+    code: "Code",
+    codeSent: "Sent",
+    codeNotSent: "Not sent",
+    empty: "No runs yet",
+    emptyBody: "Plan a run and it will appear here.",
+    noMatches: "No runs match these filters",
+    noMatchesBody: "Try widening the status or driver filter.",
+    clearFilters: "Clear filters",
+    planRun: "Plan a run",
+    showing: "Showing",
+    of: "of",
+    prev: "Previous",
+    next: "Next",
+
+    detailTitle: "Run",
+    consignment: "Consignment",
+    receiver: "Receiver",
+    resend: "Resend code",
+    resendTitle: "Send a new code?",
+    // A resend mints a fresh code and kills the old one. Said plainly, because
+    // a supervisor who does not realise will wonder why the first stopped.
+    resendBody:
+      "A new code is generated and emailed. The code they were sent before stops working immediately.",
+    resendDone: "A new code is on its way.",
+    resendFailed: "The new code didn't send. Try again in a moment.",
+    cancelRun: "Cancel run",
+    cancelTitle: "Cancel this run?",
+    cancelPendingBody: "Nobody has started it, so nothing is lost. The driver's code stops working.",
+    // Cancelling an active run stops someone who is currently driving.
+    cancelActiveBody:
+      "This driver is on the road right now. They'll be told the run is cancelled. Say why — it goes on the record.",
+    cancelReason: "Reason",
+    cancelReasonRequired: "A reason is required when the driver is already on the road.",
+    cancelledOn: "Cancelled",
+    // Tracking is ticket 13; an unexplained blank panel reads as a bug.
+    trackingSoon: "Live tracking and the recorded trail arrive in ticket 13.",
+    notFound: "That run doesn't exist",
+    notFoundBody: "It may have been removed, or the link may be wrong.",
+    backToTrips: "Back to Trips",
+  },
+
   placeholder: {
     // Stub pages name the ticket that fills them, so an empty screen reads as
     // "not built yet" rather than "broken".

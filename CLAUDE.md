@@ -62,7 +62,7 @@ Android  ──code, then session token──► Edge Functions
 - Stack is locked: Vite + React 18 + TypeScript **strict** + Tailwind. Functional components and hooks only. **No** Redux/MobX, **no** UI kit. `@supabase/supabase-js` for auth and realtime.
 - **There is no signup route.** Supervisors are created in the Supabase dashboard with a matching `admins` row. An authenticated user without an active `admins` row is signed out immediately.
 - **Responsive is an acceptance criterion**, not a nice-to-have: 375 px, 768 px, 1280 px+. The wizard's map+list layout stacks below 768 px.
-- **Theme tokens** (inherited from humblecoders.in, do not invent colors): bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold `#f5c451` · radius `0.875rem` · Inter (logo script: Caveat). Dark theme only. Defined **once** in `tailwind.config.ts` — never an ad-hoc hex in a component.
+- **Theme tokens** (inherited from humblecoders.in, do not invent colors): bg `#07090f` · card `#0f131c` · secondary `#161b27` · muted `#1a2030` · text `#f4f6fb` · muted-text `#94a0b8` · brand `#4263a6` · brand-2 `#5b7cc4` · border `#5b7cc424` · gold `#f5c451` · radius `0.875rem` · Inter (logo script: Caveat). Dark theme only. Defined **once** in the `@theme` block of `web/src/index.css` — Tailwind 4 is CSS-first and there is no `tailwind.config.ts`. Never an ad-hoc hex in a component.
 
 ### Android (`android/`)
 - Kotlin + Jetpack Compose + Maps SDK + Room + **Retrofit/kotlinx.serialization**. minSdk 26, target current stable, **both orientations supported**. **No DI framework** — see manual DI below.

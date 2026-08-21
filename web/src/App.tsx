@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { AppShell } from "./routes/AppShell";
 import { Login } from "./routes/Login";
-import { Stub } from "./routes/Stub";
 import { Drivers } from "./routes/Drivers";
+import { Plan } from "./routes/Plan";
+import { Trips } from "./routes/Trips";
+import { TripDetail } from "./routes/TripDetail";
 import { NotFound } from "./routes/NotFound";
 import { LoadingState } from "./components/ui";
 import { strings } from "./strings";
@@ -65,9 +67,9 @@ export function App() {
           <Route element={<Protected />}>
             <Route index element={<Navigate to="/trips" replace />} />
             <Route path="/drivers" element={<Drivers />} />
-            <Route path="/plan" element={<Stub title={strings.nav.plan} note={strings.placeholder.plan} />} />
-            <Route path="/trips" element={<Stub title={strings.nav.trips} note={strings.placeholder.trips} />} />
-            <Route path="/trips/:id" element={<Stub title={strings.nav.trips} note={strings.placeholder.tripDetail} />} />
+            <Route path="/plan" element={<Plan />} />
+            <Route path="/trips" element={<Trips />} />
+            <Route path="/trips/:id" element={<TripDetail />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
