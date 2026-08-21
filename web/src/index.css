@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* Humble Drive theme.
+ *
+ * Every colour, radius and font in the app comes from here. CLAUDE.md forbids
+ * ad-hoc hex in components, and the tokens are inherited from humblecoders.in
+ * rather than invented.
+ *
+ * Tailwind 4 is CSS-first, so this @theme block is what CLAUDE.md means by
+ * "defined once in the Tailwind config" — there is no tailwind.config.ts.
+ *
+ * Dark theme only, per PRD D-21. That deliberately overrides the usual
+ * light + dark requirement: humblecoders.in has no light palette to inherit,
+ * so supporting light would mean inventing and maintaining one. Because every
+ * colour is a token, adding light later stays a config change.
+ */
+@theme {
+  --color-bg: #07090f;
+  --color-card: #0f131c;
+  --color-secondary: #161b27;
+  --color-muted: #1a2030;
+  --color-text: #f4f6fb;
+  --color-muted-text: #94a0b8;
+  --color-brand: #4263a6;
+  --color-brand-2: #5b7cc4;
+  --color-edge: #5b7cc424;
+  --color-gold: #f5c451;
+
+  --radius-token: 0.875rem;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Caveat", ui-serif, cursive;
+}
+
+html {
+  background-color: var(--color-bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus everywhere. Removing an outline without replacing it is the
+ * single most common way a keyboard user gets stranded. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
