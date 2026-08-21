@@ -51,9 +51,10 @@ export function AppShell() {
             variant="secondary"
             aria-expanded={menuOpen}
             aria-controls="primary-nav"
+            aria-label={menuOpen ? strings.nav.menuCloseLabel : strings.nav.menuOpenLabel}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            {menuOpen ? strings.common.close : strings.nav.trips}
+            {menuOpen ? strings.common.close : strings.nav.menu}
           </Button>
         </header>
 

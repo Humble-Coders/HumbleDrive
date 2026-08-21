@@ -20,6 +20,9 @@ export const strings = {
     plan: "Plan a run",
     trips: "Trips",
     signOut: "Sign out",
+    menu: "Menu",
+    menuOpenLabel: "Open navigation",
+    menuCloseLabel: "Close navigation",
     skipToContent: "Skip to content",
   },
 

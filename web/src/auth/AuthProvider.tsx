@@ -18,6 +18,18 @@ export interface Supervisor {
   name: string;
 }
 
+/** What admin-me actually returns. CLAUDE.md fixes the convention: snake_case
+ *  across the API boundary, camelCase inside TypeScript. So the wire shape is
+ *  typed separately and mapped, rather than letting snake_case leak inward. */
+interface AdminMeResponse {
+  user_id: string;
+  name: string;
+}
+
+function toSupervisor(res: AdminMeResponse): Supervisor {
+  return { userId: res.user_id, name: res.name };
+}
+
 type Status =
   | { state: "loading" }
   | { state: "signed-out"; notSupervisor?: boolean }
@@ -46,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const me = await callFunction<Supervisor>("admin-me");
-      setStatus({ state: "signed-in", supervisor: me });
+      const me = await callFunction<AdminMeResponse>("admin-me");
+      setStatus({ state: "signed-in", supervisor: toSupervisor(me) });
     } catch (err) {
       // not_admin is the meaningful one: a real account that is not staff.
       // Anything else (expired token, outage) also cannot be trusted as a
@@ -89,8 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error || !data.session) throw new BadCredentials();
 
       try {
-        const me = await callFunction<Supervisor>("admin-me");
-        setStatus({ state: "signed-in", supervisor: me });
+        const me = await callFunction<AdminMeResponse>("admin-me");
+        setStatus({ state: "signed-in", supervisor: toSupervisor(me) });
       } catch (err) {
         await supabase.auth.signOut();
         setStatus({ state: "signed-out", notSupervisor: true });
