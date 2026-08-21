@@ -66,8 +66,21 @@ export async function sendCode(
         text,
       }),
     });
+
+    if (!res.ok) {
+      // Swallowing this silently makes a failed send undiagnosable: the caller
+      // only learns `sent: false`, with no way to tell a bad key from a
+      // rejected sender address. Logged server-side, never returned — and
+      // never with the code in it.
+      const detail = await res.text().catch(() => "");
+      console.error(
+        `Resend rejected the send: HTTP ${res.status} from=${deps.from()} detail=${detail.slice(0, 300)}`,
+      );
+    }
+
     return { sent: res.ok };
-  } catch {
+  } catch (err) {
+    console.error("Resend request failed:", err instanceof Error ? err.message : err);
     return { sent: false };
   }
 }
