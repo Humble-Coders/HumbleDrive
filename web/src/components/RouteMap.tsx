@@ -37,17 +37,38 @@ const DARK_STYLE = [
 
 let loader: Promise<void> | null = null;
 
+/**
+ * Load the Maps JS API once.
+ *
+ * `loading=async` is what Google asks for, but it changes the contract:
+ * script.onload fires before `google.maps` is populated, so waiting on onload
+ * gives you a script that has loaded and an API that is not there yet. The
+ * documented answer is a callback parameter, which is what this uses.
+ *
+ * The cached promise is cleared on failure — otherwise one transient network
+ * error would poison every later mount for the life of the page, and the map
+ * would claim to be unconfigured when it was merely unlucky.
+ */
 function loadMaps(): Promise<void> {
   if (!KEY) return Promise.reject(new Error("no key"));
   if (loader) return loader;
-  loader = new Promise((resolve, reject) => {
+
+  loader = new Promise<void>((resolve, reject) => {
+    const callbackName = "__humbleDriveMapsReady";
+    // deno-lint-ignore no-explicit-any
+    (window as any)[callbackName] = () => resolve();
+
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&libraries=geometry`;
+    script.src =
+      `https://maps.googleapis.com/maps/api/js?key=${KEY}&libraries=geometry&loading=async&callback=${callbackName}`;
     script.async = true;
-    script.onload = () => resolve();
     script.onerror = () => reject(new Error("maps failed to load"));
     document.head.appendChild(script);
+  }).catch((err) => {
+    loader = null;
+    throw err;
   });
+
   return loader;
 }
 
@@ -74,6 +95,12 @@ export function RouteMap({
         // deno-lint-ignore no-explicit-any
         const g = (window as any).google;
         const map = new g.maps.Map(ref.current, {
+          // colorScheme is the current way to get a dark map (Maps JS 3.60+)
+          // and it works on both the raster and vector renderers. The JSON
+          // `styles` array below only applies to raster maps, and is silently
+          // ignored on vector ones — which is why the map came back light
+          // despite the styles being correct.
+          colorScheme: "DARK",
           styles: DARK_STYLE,
           disableDefaultUI: true,
           zoomControl: true,
@@ -95,6 +122,10 @@ export function RouteMap({
         }
 
         for (const m of markers) {
+          // google.maps.Marker is deprecated in favour of AdvancedMarkerElement,
+          // which needs a Map ID and therefore cloud-side configuration. Marker
+          // still works and is not scheduled for removal; revisit when the
+          // project has a Map ID (ticket 15).
           new g.maps.Marker({
             position: { lat: m.lat, lng: m.lng },
             map,
