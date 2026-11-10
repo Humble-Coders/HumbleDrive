@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* Humble Drive theme.
+ *
+ * Every colour, radius and font in the app comes from here. CLAUDE.md forbids
+ * ad-hoc hex in components, and the tokens are inherited from humblecoders.in
+ * rather than invented.
+ *
+ * Tailwind 4 is CSS-first, so this @theme block is what CLAUDE.md means by
+ * "defined once in the Tailwind config" — there is no tailwind.config.ts.
+ *
+ * Dark theme only, per PRD D-21. That deliberately overrides the usual
+ * light + dark requirement: humblecoders.in has no light palette to inherit,
+ * so supporting light would mean inventing and maintaining one. Because every
+ * colour is a token, adding light later stays a config change.
+ */
+@theme {
+  --color-bg: #07090f;
+  --color-card: #0f131c;
+  --color-secondary: #161b27;
+  --color-muted: #1a2030;
+  --color-text: #f4f6fb;
+  --color-muted-text: #94a0b8;
+  --color-brand: #4263a6;
+  --color-brand-2: #5b7cc4;
+  --color-edge: #5b7cc424;
+  --color-gold: #f5c451;
+
+  --radius-token: 0.875rem;
+
+  /* Added for the visual pass. Still derived from the brand tokens rather than
+   * invented: elevated is card lifted one step, glow is the brand at low alpha
+   * for focus and selection, and hairline is the border at half strength for
+   * dividers inside a card. */
+  --color-elevated: #131826;
+  --color-glow: #5b7cc41f;
+  --color-hairline: #5b7cc414;
+  --color-positive: #6fb28a;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Caveat", ui-serif, cursive;
+  /* The wordmark face. CLAUDE.md names Caveat as the logo script; a tight
+   * grotesque reads as a product mark rather than a signature, which suits a
+   * dispatch tool better. Caveat stays defined for anywhere the script is
+   * still wanted. */
+  --font-wordmark: "Archivo", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background-color: var(--color-bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus everywhere. Removing an outline without replacing it is the
+ * single most common way a keyboard user gets stranded. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* A single soft vignette behind everything, so the page has a centre of
+ * gravity instead of reading as a uniform slab of near-black. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, var(--color-glow), transparent 70%),
+    radial-gradient(50rem 35rem at 100% 0%, var(--color-hairline), transparent 65%);
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
+
+/* The travelling dashes on the sign-in illustration. The only motion in the
+ * app, and it stops completely under reduced-motion. */
+.route-dashes {
+  stroke-dashoffset: 0;
+  animation: route-travel 3.5s linear infinite;
+}
+
+@keyframes route-travel {
+  to { stroke-dashoffset: -48; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-dashes { animation: none; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

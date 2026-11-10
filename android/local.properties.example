@@ -1,0 +1,6 @@
+# Copy to local.properties and fill in. Gitignored.
+sdk.dir=/Users/you/Library/Android/sdk
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+# Maps SDK for Android only, restricted by package name + signing SHA-1.
+MAPS_API_KEY_ANDROID=

@@ -6,7 +6,7 @@
 // to see to block the response.
 
 /** Request headers the browser is allowed to send us. */
-const ALLOWED_HEADERS = "authorization, content-type, apikey, x-client-info";
+const ALLOWED_HEADERS = "authorization, content-type, apikey, x-client-info, x-driver-token";
 
 const MAX_AGE_SECONDS = "86400";
 

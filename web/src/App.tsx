@@ -1,0 +1,80 @@
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import { AppShell } from "./routes/AppShell";
+import { Login } from "./routes/Login";
+import { Dashboard } from "./routes/Dashboard";
+import { Drivers } from "./routes/Drivers";
+import { Plan } from "./routes/Plan";
+import { Trips } from "./routes/Trips";
+import { TripDetail } from "./routes/TripDetail";
+import { NotFound } from "./routes/NotFound";
+import { LoadingState } from "./components/ui";
+import { strings } from "./strings";
+
+/**
+ * Routing.
+ *
+ * Note what is absent: there is no /signup route. Supervisors are created by
+ * hand in the Supabase dashboard (PRD §5.1). If you are adding a registration
+ * form, stop and re-read the ticket.
+ */
+
+/** Requires a session AND an active admins row. Both, in that order. */
+function Protected() {
+  const { status } = useAuth();
+  const location = useLocation();
+
+  if (status.state === "loading") {
+    return (
+      <main className="flex min-h-dvh items-center justify-center px-4">
+        <LoadingState label={strings.login.checking} />
+      </main>
+    );
+  }
+
+  if (status.state === "signed-out") {
+    // Remember where they were headed so signing in returns them there.
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  }
+
+  return <AppShell />;
+}
+
+function LoginRoute() {
+  const { status } = useAuth();
+  const location = useLocation() as { state?: { from?: string } };
+
+  if (status.state === "loading") {
+    return (
+      <main className="flex min-h-dvh items-center justify-center px-4">
+        <LoadingState label={strings.login.checking} />
+      </main>
+    );
+  }
+
+  if (status.state === "signed-in") {
+    return <Navigate to={location.state?.from ?? "/"} replace />;
+  }
+
+  return <Login notSupervisor={status.notSupervisor} />;
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginRoute />} />
+          <Route element={<Protected />}>
+            <Route index element={<Dashboard />} />
+            <Route path="/drivers" element={<Drivers />} />
+            <Route path="/plan" element={<Plan />} />
+            <Route path="/trips" element={<Trips />} />
+            <Route path="/trips/:id" element={<TripDetail />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
